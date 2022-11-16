@@ -49,7 +49,4 @@ tutorials/*/app/libs
 *.so
 *.dylib
 *.pyd
-/test/data/ppp_vision/tflite_mobilenet_v2.updated.onnx
-/test/data/ppp_vision/pytorch_super_resolution.updated.onnx
-/test/data/ppp_vision/pytorch_mobilenet_v2.updated.onnx
-/tools/pre_post_processing/docs/pdoc/index.md
+/test/data/ppp_vision/*.updated.onnx

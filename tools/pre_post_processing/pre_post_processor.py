@@ -21,11 +21,7 @@ class PrePostProcessor:
     Class to handle running all the pre/post processing steps and updating the model.
     """
 
-    def __init__(
-        self,
-        inputs: List[onnx.ValueInfoProto] = None,
-        outputs: List[onnx.ValueInfoProto] = None,
-    ):
+    def __init__(self, inputs: List[onnx.ValueInfoProto] = None, outputs: List[onnx.ValueInfoProto] = None):
         self.pre_processors = []
         self.post_processors = []
 
@@ -69,16 +65,18 @@ class PrePostProcessor:
         ):
             raise ValueError("Producer and Consumer processors must both be registered")
 
+        # Black does stupid things with the multi-line 'if' conditions making the code far less readable
+        # fmt: off
         if producer in self.pre_processors:
-            if consumer in self.pre_processors and self.pre_processors.index(producer) > self.pre_processors.index(
-                consumer
-            ):
+            if (consumer in self.pre_processors and
+                    self.pre_processors.index(producer) > self.pre_processors.index(consumer)):
                 raise ValueError("Producer was registered after consumer and cannot be connected")
         elif producer in self.post_processors:
             if consumer not in self.post_processors:
                 raise ValueError("Cannot connect pre-processor consumer with post-processor producer")
             elif self.post_processors.index(producer) > self.post_processors.index(consumer):
                 raise ValueError("Producer was registered after consumer and cannot be connected")
+        # fmt: on
 
         assert isinstance(producer, Step)
         consumer.connect(entry)
@@ -256,12 +254,8 @@ class PrePostProcessor:
         if isinstance(entry, Step):
             return entry
         if isinstance(entry, str):
-            # search for existing pre or post processing step by name. we do this as each Step is registered so
-            # self.pre_processors and self.post_processors will only contain predecessor entries.
-            # i.e. any match can is a valid producer Step.
-            match = next((s for s in self.pre_processors if s.name == entry), None) or next(
-                (s for s in self.post_processors if s.name == entry), None
-            )
+            match = (next((s for s in self.pre_processors if s.name == entry), None) or
+                     next((s for s in self.post_processors if s.name == entry), None))  # fmt: skip
 
             if not match:
                 raise ValueError(f"Step named {entry} was not found")

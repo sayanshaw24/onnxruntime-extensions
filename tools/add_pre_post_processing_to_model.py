@@ -159,15 +159,15 @@ def main():
     parser = argparse.ArgumentParser(
         os.path.basename(__file__),
         description="""Add pre and post processing to a model.
-        
+
         Currently supports updating:
           - super resolution with YCbCr input
           - imagenet trained mobilenet   
-          
+
         To customize, the logic in the `mobilenet` and `superresolution` functions can be used as a guide.
         Create a pipeline and add the required pre/post processing 'Steps' in the order required. Configure 
         individual steps as needed. 
-        
+
         The updated model will be written in the same location as the original model, with '.onnx' updated to 
         '.with_pre_post_processing.onnx'
         """,
