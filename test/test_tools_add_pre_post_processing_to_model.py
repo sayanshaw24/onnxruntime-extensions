@@ -1,18 +1,21 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import unittest
+try:
+    import unittest
 
-import io
-import numpy as np
-import onnxruntime as ort
-import os
-import subprocess
-import sys
+    import io
+    import numpy as np
+    import onnxruntime as ort
+    import os
+    import subprocess
+    import sys
 
-from PIL import Image
-from pathlib import Path
-from onnxruntime_extensions import get_library_path
+    from PIL import Image
+    from pathlib import Path
+    from onnxruntime_extensions import get_library_path
+except Exception as ex:
+    print(ex)
 
 # add tools dir where pre_post_processing folder is to sys path
 # TODO: Move this script to test folder so this is needed
@@ -25,19 +28,19 @@ sys.path.append(tools_dir)
 import add_pre_post_processing_to_model as add_ppp
 
 
-def _get_labels(is_pytorch: bool = True):
-    labels_file = os.path.join(test_data_dir, "TF.ImageNetLabels.txt")
-    labels = []
-    with open(labels_file, 'r') as infile:
-        # skip first 'background' entry if pytorch as that model was not trained with it
-        if is_pytorch:
-            _ = infile.readline()
-
-        for line in infile:
-            labels.append(line.strip())
-
-    assert(len(labels) == 1000 if is_pytorch else 1001)
-    return labels
+# def _get_labels(is_pytorch: bool = True):
+#     labels_file = os.path.join(test_data_dir, "TF.ImageNetLabels.txt")
+#     labels = []
+#     with open(labels_file, 'r') as infile:
+#         # skip first 'background' entry if pytorch as that model was not trained with it
+#         if is_pytorch:
+#             _ = infile.readline()
+#
+#         for line in infile:
+#             labels.append(line.strip())
+#
+#     assert(len(labels) == 1000 if is_pytorch else 1001)
+#     return labels
 
 
 class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
@@ -153,15 +156,6 @@ class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
         add_ppp.superresolution(Path(input_model), Path(output_model))
 
         input_bytes = np.fromfile(input_image_path, dtype=np.uint8)
-        # expected_bytes = np.fromfile(expected_output_image_path, dtype=np.uint8)
-        #
-        # so = ort.SessionOptions()
-        # so.register_custom_ops_library(get_library_path())
-        # s = ort.InferenceSession(output_model, so)
-        #
-        # result = s.run(None, {'image': np.array(input_bytes)})[0]
-        # self.assertTrue(np.all(result == expected_bytes))
-        expected = Image.open(expected_output_image_path).convert('RGB')
 
         so = ort.SessionOptions()
         so.register_custom_ops_library(get_library_path())
@@ -169,8 +163,16 @@ class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
 
         result_bytes = s.run(None, {'image': np.array(input_bytes)})[0]
 
-        result = Image.open(io.BytesIO(result_bytes)).convert('RGB')
-        self.assertTrue(np.all(np.asarray(expected) == np.asarray(result)))
+        # convert from jpg to RGB to remove and jpg encoding diffs
+        result = np.array(Image.open(io.BytesIO(result_bytes)).convert('RGB'))
+        expected = np.array(Image.open(expected_output_image_path).convert('RGB'))
+
+        # check all pixel values are within 1.
+        #
+        # we expect some variance from the floating point operations involved during Resize and conversion of the
+        # original image to/from YCbCr. the different instructions used on different hardware can cause diffs, such as
+        # whether avx512 is used or not.
+        self.assertTrue(np.allclose(expected, result, atol=1, rtol=0))
 
 
 if __name__ == "__main__":
