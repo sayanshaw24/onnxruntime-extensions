@@ -153,14 +153,24 @@ class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
         add_ppp.superresolution(Path(input_model), Path(output_model))
 
         input_bytes = np.fromfile(input_image_path, dtype=np.uint8)
-        expected_bytes = np.fromfile(expected_output_image_path, dtype=np.uint8)
+        # expected_bytes = np.fromfile(expected_output_image_path, dtype=np.uint8)
+        #
+        # so = ort.SessionOptions()
+        # so.register_custom_ops_library(get_library_path())
+        # s = ort.InferenceSession(output_model, so)
+        #
+        # result = s.run(None, {'image': np.array(input_bytes)})[0]
+        # self.assertTrue(np.all(result == expected_bytes))
+        expected = Image.open(expected_output_image_path).convert('RGB')
 
         so = ort.SessionOptions()
         so.register_custom_ops_library(get_library_path())
         s = ort.InferenceSession(output_model, so)
 
-        result = s.run(None, {'image': np.array(input_bytes)})[0]
-        self.assertTrue(np.all(result == expected_bytes))
+        result_bytes = s.run(None, {'image': np.array(input_bytes)})[0]
+
+        result = Image.open(io.BytesIO(result_bytes)).convert('RGB')
+        self.assertTrue(np.all(np.asarray(expected) == np.asarray(result)))
 
 
 if __name__ == "__main__":
