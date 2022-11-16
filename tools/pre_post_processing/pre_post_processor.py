@@ -91,8 +91,8 @@ class PrePostProcessor:
             # but there are no guarantees.
             # Would only break if ONNX operators used in the pre/post processing graphs have had spec changes.
             raise ValueError(f"Model opset is {model_opset} which is newer than the opset used by this script.")
-
-        model = onnx.version_converter.convert_version(model, PRE_POST_PROCESSING_ONNX_OPSET)
+        elif model_opset < PRE_POST_PROCESSING_ONNX_OPSET:
+            model = onnx.version_converter.convert_version(model, PRE_POST_PROCESSING_ONNX_OPSET)
 
         def name_nodes(new_graph: onnx.GraphProto, prefix: str):
             # simple helper so all nodes are named. this makes it far easier to debug any issues.
@@ -176,17 +176,11 @@ class PrePostProcessor:
         # Make the output names nicer by removing prefixing from naming that occurred when applying the steps
         graph = PrePostProcessor.__cleanup_graph_output_names(graph)
 
-        new_model = onnx.helper.make_model(graph)
-
-        for domain, opset in get_opset_imports().items():
-            # 'if' condition skips onnx domain which is an empty string. model should already have an opset_import
-            # that matches that.
-            if domain:
-                custom_op_import = new_model.opset_import.add()
-                custom_op_import.domain = domain
-                custom_op_import.version = opset
+        opset_imports = [onnx.helper.make_operatorsetid(domain, opset) for domain, opset in get_opset_imports().items()]
+        new_model = onnx.helper.make_model(graph, opset_imports=opset_imports)
 
         onnx.checker.check_model(new_model)
+
         return new_model
 
     def __add_processing(self,
