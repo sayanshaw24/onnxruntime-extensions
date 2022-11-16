@@ -4,6 +4,7 @@
 import argparse
 import enum
 import os
+
 #
 # from dataclasses import dataclass
 from pathlib import Path
@@ -37,18 +38,13 @@ def imagenet_preprocessing(model_source: ModelSource = ModelSource.PYTORCH):
     # These utils cover both cases of typical pytorch/tensorflow pre-processing for an imagenet trained model
     # https://github.com/keras-team/keras/blob/b80dd12da9c0bc3f569eca3455e77762cf2ee8ef/keras/applications/imagenet_utils.py#L177
 
-    steps = [
-        Resize(256),
-        CenterCrop(224, 224),
-        ImageBytesToFloat()
-    ]
+    steps = [Resize(256), CenterCrop(224, 224), ImageBytesToFloat()]
 
     if model_source == ModelSource.PYTORCH:
         # pytorch model has NCHW layout
-        steps.extend([
-            ChannelsLastToChannelsFirst(),
-            Normalize([(0.485, 0.229), (0.456, 0.224), (0.406, 0.225)], layout="CHW")
-        ])
+        steps.extend(
+            [ChannelsLastToChannelsFirst(), Normalize([(0.485, 0.229), (0.456, 0.224), (0.406, 0.225)], layout="CHW")]
+        )
     else:
         # TF processing involves moving the data into the range -1..1 instead of 0..1.
         # ImageBytesToFloat converts to range 0..1, so we use 0.5 for the mean to move into the range -0.5..0.5
@@ -120,9 +116,7 @@ def superresolution(model_file: Path, output_file: Path):
             # if you inserted this Debug step here the 3 outputs from PixelsToYCbCr would also be model outputs
             # Debug(num_inputs=3),
             ImageBytesToFloat(),  # Convert Y to float in range 0..1
-            Unsqueeze(
-                [0, 1]
-            ),  # add batch and channels dim to Y so shape is {1, 1, h_in, w_in}
+            Unsqueeze([0, 1]),  # add batch and channels dim to Y so shape is {1, 1, h_in, w_in}
         ]
     )
 
@@ -133,9 +127,7 @@ def superresolution(model_file: Path, output_file: Path):
     pipeline.add_post_processing(
         [
             Squeeze([0, 1]),  # remove batch and channels dims from Y'
-            FloatToImageBytes(
-                name="Yout_to_bytes"
-            ),  # convert Y' to uint8 in range 0..255
+            FloatToImageBytes(name="Yout_to_bytes"),  # convert Y' to uint8 in range 0..255
             # Resize the Cb values (output 1 from PixelsToYCbCr)
             (
                 Resize((h_out, w_out), "HW"),
@@ -203,9 +195,7 @@ def main():
         """,
     )
 
-    parser.add_argument(
-        "model", type=Path, help="Provide path to ONNX model to update."
-    )
+    parser.add_argument("model", type=Path, help="Provide path to ONNX model to update.")
 
     args = parser.parse_args()
 

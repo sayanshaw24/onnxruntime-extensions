@@ -33,9 +33,7 @@ class ConvertImageToBGR(Step):
     def _create_graph_for_step(self, graph: onnx.GraphProto):
         input_type_str, input_shape_str = self._get_input_type_and_shape_strs(graph, 0)
         assert input_type_str == "uint8"
-        output_shape_str = (
-            f"to_bgr_ppp_{self.step_num}_h, to_bgr_ppp_{self.step_num}_w, 3"
-        )
+        output_shape_str = f"to_bgr_ppp_{self.step_num}_h, to_bgr_ppp_{self.step_num}_w, 3"
 
         converter_graph = onnx.parser.parse_graph(
             f"""\
@@ -117,9 +115,7 @@ class PixelsToYCbCr(Step):
         input_type_str, input_shape_str = self._get_input_type_and_shape_strs(graph, 0)
         # input should be uint8 data HWC
         input_dims = input_shape_str.split(",")
-        assert (
-            input_type_str == "uint8" and len(input_dims) == 3 and input_dims[2] == "3"
-        )
+        assert input_type_str == "uint8" and len(input_dims) == 3 and input_dims[2] == "3"
 
         # https://en.wikipedia.org/wiki/YCbCr - note there are different 'RGB' types and YCbCr conversions
         # This is the JPEG conversion and gives accuracy that is equivalent to opencv2 (when compared to PIL).
@@ -210,23 +206,11 @@ class YCbCrToPixels(Step):
         self._layout = layout
 
     def _create_graph_for_step(self, graph: onnx.GraphProto):
-        input_type_str0, input_shape_str0 = self._get_input_type_and_shape_strs(
-            graph, 0
-        )
-        input_type_str1, input_shape_str1 = self._get_input_type_and_shape_strs(
-            graph, 1
-        )
-        input_type_str2, input_shape_str2 = self._get_input_type_and_shape_strs(
-            graph, 2
-        )
-        assert (
-            input_type_str0 == "uint8"
-            and input_type_str1 == "uint8"
-            and input_type_str2 == "uint8"
-        ) or (
-            input_type_str0 == "float"
-            and input_type_str1 == "float"
-            and input_type_str2 == "float"
+        input_type_str0, input_shape_str0 = self._get_input_type_and_shape_strs(graph, 0)
+        input_type_str1, input_shape_str1 = self._get_input_type_and_shape_strs(graph, 1)
+        input_type_str2, input_shape_str2 = self._get_input_type_and_shape_strs(graph, 2)
+        assert (input_type_str0 == "uint8" and input_type_str1 == "uint8" and input_type_str2 == "uint8") or (
+            input_type_str0 == "float" and input_type_str1 == "float" and input_type_str2 == "float"
         )
 
         assert (
@@ -256,9 +240,7 @@ class YCbCrToPixels(Step):
             ]
         )
 
-        weights = (
-            ycbcr_to_bgr_weights if self._layout == "BGR" else ycbcr_to_rbg_weights
-        )
+        weights = ycbcr_to_bgr_weights if self._layout == "BGR" else ycbcr_to_rbg_weights
         bias = [0.0, 128.0, 128.0]
 
         weights_shape = "3, 3"
@@ -356,17 +338,13 @@ class Resize(Step):
             assert len(dims) == 3
             split_str = "c, h, w"
             scales_str = "f_1, ratio_resize, ratio_resize"
-            output_shape_str = (
-                f"{dims[0]}, resize_ppp_{self.step_num}_h, resize_ppp_{self.step_num}_w"
-            )
+            output_shape_str = f"{dims[0]}, resize_ppp_{self.step_num}_h, resize_ppp_{self.step_num}_w"
         elif self._layout == "HW":
             assert len(dims) == 2
             split_str = "h, w"
             scales_str = "ratio_resize, ratio_resize"
             scales_constant_str = ""
-            output_shape_str = (
-                f"resize_ppp_{self.step_num}_h, resize_ppp_{self.step_num}_w"
-            )
+            output_shape_str = f"resize_ppp_{self.step_num}_h, resize_ppp_{self.step_num}_w"
         else:
             raise ValueError(f"Unsupported layout of {self._layout}")
 

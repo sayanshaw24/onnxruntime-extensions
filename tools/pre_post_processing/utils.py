@@ -116,8 +116,6 @@ def sanitize_output_names(graph: onnx.GraphProto):
     for o in graph.output:
         if o.name in bad_output_names:
             # Add Identity node to rename the output, and update the name in graph.output
-            rename = onnx.helper.make_node(
-                "Identity", [o.name], [renames[o.name]], f"Rename {o.name}"
-            )
+            rename = onnx.helper.make_node("Identity", [o.name], [renames[o.name]], f"Rename {o.name}")
             graph.node.append(rename)
             o.name = renames[o.name]

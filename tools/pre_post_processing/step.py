@@ -21,9 +21,7 @@ class Step(object):
     _step_num = 0  # unique step number so we can prefix the naming in the graph created for the step
     _custom_op_checker_context = create_custom_op_checker_context()
 
-    def __init__(
-        self, inputs: List[str], outputs: List[str], name: Optional[str] = None
-    ):
+    def __init__(self, inputs: List[str], outputs: List[str], name: Optional[str] = None):
         """
         Initialize the step.
 
@@ -49,9 +47,7 @@ class Step(object):
         assert len(self.input_names) >= entry.consumer_idx
         assert isinstance(entry.producer, Step)
 
-        self.input_names[entry.consumer_idx] = entry.producer.output_names[
-            entry.producer_idx
-        ]
+        self.input_names[entry.consumer_idx] = entry.producer.output_names[entry.producer_idx]
 
     def apply(self, graph: onnx.GraphProto):
         """Append the nodes that implement this step to the provided graph."""
@@ -104,14 +100,10 @@ class Step(object):
             # doesn't change the number of outputs from the previous step, so it can be transparently inserted in the
             # pre/post processing pipeline.
             # need to also list the second graph's outputs when manually specifying outputs.
-            outputs_to_preserve = [o.name for o in first.output] + [
-                o.name for o in second.output
-            ]
+            outputs_to_preserve = [o.name for o in first.output] + [o.name for o in second.output]
 
         # merge with existing graph
-        merged_graph = onnx.compose.merge_graphs(
-            first, second, io_map, outputs=outputs_to_preserve
-        )
+        merged_graph = onnx.compose.merge_graphs(first, second, io_map, outputs=outputs_to_preserve)
 
         return merged_graph
 
@@ -134,9 +126,7 @@ class Step(object):
         shape_str = ",".join([dim_to_str(dim) for dim in shape.dim])
         return shape_str
 
-    def _input_tensor_type(
-        self, graph: onnx.GraphProto, input_num: int
-    ) -> onnx.TensorProto:
+    def _input_tensor_type(self, graph: onnx.GraphProto, input_num: int) -> onnx.TensorProto:
         """Get the onnx.TensorProto for the input from the outputs of the graph we're appending to."""
 
         input_type = None
@@ -146,19 +136,13 @@ class Step(object):
                 break
 
         if not input_type:
-            raise ValueError(
-                f"Input {self.input_names[input_num]} was not found in outputs of graph."
-            )
+            raise ValueError(f"Input {self.input_names[input_num]} was not found in outputs of graph.")
 
         return input_type
 
-    def _get_input_type_and_shape_strs(
-        self, graph: onnx.GraphProto, input_num: int
-    ) -> Tuple[str, str]:
+    def _get_input_type_and_shape_strs(self, graph: onnx.GraphProto, input_num: int) -> Tuple[str, str]:
         input_type = self._input_tensor_type(graph, input_num)
-        return Step._elem_type_str(input_type.elem_type), Step._shape_to_str(
-            input_type.shape
-        )
+        return Step._elem_type_str(input_type.elem_type), Step._shape_to_str(input_type.shape)
 
 
 # special case. we include the helper Debug step here as logic in the base class is conditional on it.
@@ -196,9 +180,7 @@ class Debug(Step):
         self.output_names = [f"{name}_debug" for name in self.input_names]
 
         for i in range(0, self._num_inputs):
-            input_type_str, input_shape_str = self._get_input_type_and_shape_strs(
-                graph, i
-            )
+            input_type_str, input_shape_str = self._get_input_type_and_shape_strs(graph, i)
             if i > 0:
                 input_str += ", "
                 output_str += ", "
