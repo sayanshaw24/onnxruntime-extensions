@@ -1,21 +1,17 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-try:
-    import unittest
+import unittest
 
-    import io
-    import numpy as np
-    import onnxruntime as ort
-    import os
-    import subprocess
-    import sys
+import io
+import numpy as np
+import onnxruntime as ort
+import os
+import sys
 
-    from PIL import Image
-    from pathlib import Path
-    from onnxruntime_extensions import get_library_path
-except Exception as ex:
-    print(ex)
+from PIL import Image
+from pathlib import Path
+from onnxruntime_extensions import get_library_path
 
 # add tools dir where pre_post_processing folder is to sys path
 # TODO: Move this script to test folder so this is needed
@@ -28,6 +24,7 @@ sys.path.append(tools_dir)
 import add_pre_post_processing_to_model as add_ppp
 
 
+# Function to read the mobilenet labels and adjust for PT vs TF training if needed
 # def _get_labels(is_pytorch: bool = True):
 #     labels_file = os.path.join(test_data_dir, "TF.ImageNetLabels.txt")
 #     labels = []
@@ -78,7 +75,6 @@ class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
         def new_output():
             input_bytes = np.fromfile(input_image_path, dtype=np.uint8)
             so = ort.SessionOptions()
-            # so.register_custom_ops_library(r'D:/src/github/ort-extensions-clean/out/Windows/Debug/bin/Debug/ortextensions.dll')
             so.register_custom_ops_library(get_library_path())
 
             s = ort.InferenceSession(output_model, so)
@@ -140,7 +136,7 @@ class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
         new_idx = np.argmax(new_results)
         self.assertEqual(orig_idx, new_idx)
         # check within 1%. probability values are in range 0..1
-        assert (abs(orig_results[orig_idx] - new_results[new_idx]) < 0.01)
+        self.assertTrue(abs(orig_results[orig_idx] - new_results[new_idx]) < 0.01)
 
     def test_pytorch_superresolution(self):
         input_model = os.path.join(test_data_dir, "pytorch_super_resolution.onnx")

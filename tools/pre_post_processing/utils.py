@@ -35,10 +35,7 @@ PRE_POST_PROCESSING_ONNX_OPSET = 16
 
 def get_opset_imports():
     """Get the opset imports for a model updated by the PrePostProcessor."""
-    return {
-        "": PRE_POST_PROCESSING_ONNX_OPSET,
-        "com.microsoft.extensions": 1
-    }
+    return {"": PRE_POST_PROCESSING_ONNX_OPSET, "com.microsoft.extensions": 1}
 
 
 # Create an onnx checker context that includes the ort-ext domain so that custom ops don't cause failure
@@ -108,17 +105,19 @@ def sanitize_output_names(graph: onnx.GraphProto):
         graph: Graph to check and update any invalid names
     """
 
-    bad_output_names = [o.name for o in graph.output if '/' in o.name or ';' in o.name]
+    bad_output_names = [o.name for o in graph.output if "/" in o.name or ";" in o.name]
     if not bad_output_names:
         return graph
 
     renames = {}
     for n in bad_output_names:
-        renames[n] = n.replace('/', '_').replace(';','_')
+        renames[n] = n.replace("/", "_").replace(";", "_")
 
     for o in graph.output:
         if o.name in bad_output_names:
             # Add Identity node to rename the output, and update the name in graph.output
-            rename = onnx.helper.make_node("Identity", [o.name], [renames[o.name]], f"Rename {o.name}")
+            rename = onnx.helper.make_node(
+                "Identity", [o.name], [renames[o.name]], f"Rename {o.name}"
+            )
             graph.node.append(rename)
             o.name = renames[o.name]

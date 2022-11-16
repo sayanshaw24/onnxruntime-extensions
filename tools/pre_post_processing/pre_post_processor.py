@@ -6,8 +6,13 @@ import onnx
 from onnx import version_converter
 from typing import List, Tuple, Union
 
-from .utils import IoMapEntry, get_opset_imports, sanitize_output_names, \
-    PRE_POST_PROCESSING_ONNX_OPSET, TENSOR_TYPE_TO_ONNX_TYPE
+from .utils import (
+    IoMapEntry,
+    get_opset_imports,
+    sanitize_output_names,
+    PRE_POST_PROCESSING_ONNX_OPSET,
+    TENSOR_TYPE_TO_ONNX_TYPE,
+)
 from .step import Step
 
 
@@ -15,7 +20,12 @@ class PrePostProcessor:
     """
     Class to handle running all the pre/post processing steps and updating the model.
     """
-    def __init__(self, inputs: List[onnx.ValueInfoProto] = None, outputs: List[onnx.ValueInfoProto] = None):
+
+    def __init__(
+        self,
+        inputs: List[onnx.ValueInfoProto] = None,
+        outputs: List[onnx.ValueInfoProto] = None,
+    ):
         self.pre_processors = []
         self.post_processors = []
 
@@ -31,13 +41,19 @@ class PrePostProcessor:
         #
         # Post-processing we connect the original model output to the Step input
         #   - step_idx is for Step.input_names, and name is in graph.output
-        self._pre_processing_joins = None   # type: Union[None,List[Tuple[Union[Step, str], int, str]]]
-        self._post_processing_joins = None  # type: Union[None,List[Tuple[Union[Step, str], int, str]]]
+        self._pre_processing_joins = (
+            None
+        )  # type: Union[None,List[Tuple[Union[Step, str], int, str]]]
+        self._post_processing_joins = (
+            None
+        )  # type: Union[None,List[Tuple[Union[Step, str], int, str]]]
 
         self._inputs = inputs if inputs else []
         self._outputs = outputs if outputs else []
 
-    def add_pre_processing(self, items: List[Union[Step, Tuple[Step, List[IoMapEntry]]]]):
+    def add_pre_processing(
+        self, items: List[Union[Step, Tuple[Step, List[IoMapEntry]]]]
+    ):
         """
         Add the pre-processing steps.
         Options are:
@@ -45,29 +61,46 @@ class PrePostProcessor:
           Add tuple of Step or step name and io_map for connections between two steps.
             If IoMapEntry.producer is not specified it is inferred to be the previous Step.
         """
-        self.__add_processing(self.pre_processors, self._pre_processor_connections, items)
+        self.__add_processing(
+            self.pre_processors, self._pre_processor_connections, items
+        )
 
-    def add_post_processing(self, items: List[Union[Step, Tuple[Step, List[IoMapEntry]]]]):
-        self.__add_processing(self.post_processors, self._post_processor_connections, items)
+    def add_post_processing(
+        self, items: List[Union[Step, Tuple[Step, List[IoMapEntry]]]]
+    ):
+        self.__add_processing(
+            self.post_processors, self._post_processor_connections, items
+        )
 
     def _add_connection(self, consumer: Step, entry: IoMapEntry):
         producer = self.__producer_from_step_or_str(entry.producer)
 
-        if not((producer in self.pre_processors or producer in self.post_processors) or
-                (consumer in self.pre_processors or consumer in self.post_processors)):
+        if not (
+            (producer in self.pre_processors or producer in self.post_processors)
+            or (consumer in self.pre_processors or consumer in self.post_processors)
+        ):
             raise ValueError("Producer and Consumer processors must both be registered")
 
         if producer in self.pre_processors:
-            if (consumer in self.pre_processors and
-                    self.pre_processors.index(producer) > self.pre_processors.index(consumer)):
-                raise ValueError("Producer was registered after consumer and cannot be connected")
+            if consumer in self.pre_processors and self.pre_processors.index(
+                producer
+            ) > self.pre_processors.index(consumer):
+                raise ValueError(
+                    "Producer was registered after consumer and cannot be connected"
+                )
         elif producer in self.post_processors:
             if consumer not in self.post_processors:
-                raise ValueError("Cannot connect pre-processor consumer with post-processor producer")
-            elif self.post_processors.index(producer) > self.post_processors.index(consumer):
-                raise ValueError("Producer was registered after consumer and cannot be connected")
+                raise ValueError(
+                    "Cannot connect pre-processor consumer with post-processor producer"
+                )
+            elif self.post_processors.index(producer) > self.post_processors.index(
+                consumer
+            ):
+                raise ValueError(
+                    "Producer was registered after consumer and cannot be connected"
+                )
 
-        assert(isinstance(producer, Step))
+        assert isinstance(producer, Step)
         consumer.connect(entry)
 
     def run(self, model: onnx.ModelProto):
@@ -83,16 +116,23 @@ class PrePostProcessor:
 
         # update the input model to the ONNX opset we're using. this is required as we implement the steps based on
         # the operator specs for this opset.
-        model_opset = [entry.version for entry in model.opset_import
-                       if entry.domain == '' or entry.domain == 'ai.onnx'][0]
+        model_opset = [
+            entry.version
+            for entry in model.opset_import
+            if entry.domain == "" or entry.domain == "ai.onnx"
+        ][0]
 
         if model_opset > PRE_POST_PROCESSING_ONNX_OPSET:
             # It will probably work if the user updates PRE_POST_PROCESSING_ONNX_OPSET to match the model
             # but there are no guarantees.
             # Would only break if ONNX operators used in the pre/post processing graphs have had spec changes.
-            raise ValueError(f"Model opset is {model_opset} which is newer than the opset used by this script.")
+            raise ValueError(
+                f"Model opset is {model_opset} which is newer than the opset used by this script."
+            )
         elif model_opset < PRE_POST_PROCESSING_ONNX_OPSET:
-            model = onnx.version_converter.convert_version(model, PRE_POST_PROCESSING_ONNX_OPSET)
+            model = onnx.version_converter.convert_version(
+                model, PRE_POST_PROCESSING_ONNX_OPSET
+            )
 
         def name_nodes(new_graph: onnx.GraphProto, prefix: str):
             # simple helper so all nodes are named. this makes it far easier to debug any issues.
@@ -102,9 +142,11 @@ class PrePostProcessor:
                     n.name = prefix + str(idx)
                     idx += 1
 
-        def connect_and_run(graph: onnx.GraphProto, processor: Step, connections: List[IoMapEntry]):
+        def connect_and_run(
+            graph: onnx.GraphProto, processor: Step, connections: List[IoMapEntry]
+        ):
             for connection in connections:
-                assert(connection.producer)
+                assert connection.producer
                 self._add_connection(processor, connection)
 
             return processor.apply(graph)
@@ -123,7 +165,9 @@ class PrePostProcessor:
                 pre_process_graph.output.append(i)
 
             for idx, step in enumerate(self.pre_processors):
-                pre_process_graph = connect_and_run(pre_process_graph, step, self._pre_processor_connections[idx])
+                pre_process_graph = connect_and_run(
+                    pre_process_graph, step, self._pre_processor_connections[idx]
+                )
 
             # name all the nodes for easier debugging
             name_nodes(pre_process_graph, "pre_process_")
@@ -132,7 +176,9 @@ class PrePostProcessor:
                 # default to 1:1 between outputs of last step with inputs of original model
                 last_step = self.pre_processors[-1]
                 num_entries = min(len(last_step.output_names), len(graph.input))
-                self._pre_processing_joins = [(last_step, i, graph.input[i].name) for i in range(0, num_entries)]
+                self._pre_processing_joins = [
+                    (last_step, i, graph.input[i].name) for i in range(0, num_entries)
+                ]
 
             # map the pre-processing outputs to graph inputs
             io_map = []  # type: List[Tuple[str, str]]
@@ -144,18 +190,23 @@ class PrePostProcessor:
         # add post-processing
         if self.post_processors:
             orig_model_outputs = [o.name for o in model.graph.output]
-            graph_outputs = [o.name for o in graph.output]  # this may have additional outputs from pre-processing
+            graph_outputs = [
+                o.name for o in graph.output
+            ]  # this may have additional outputs from pre-processing
 
             # create default joins if needed
             if not self._post_processing_joins:
                 # default to 1:1 between outputs of original model with inputs of first post-processing step
                 first_step = self.post_processors[0]
                 num_entries = min(len(first_step.input_names), len(orig_model_outputs))
-                self._post_processing_joins = [(first_step, i, orig_model_outputs[i]) for i in range(0, num_entries)]
+                self._post_processing_joins = [
+                    (first_step, i, orig_model_outputs[i])
+                    for i in range(0, num_entries)
+                ]
 
             # update the input names for the steps to match the values produced by the model
             for step, step_idx, graph_output in self._post_processing_joins:
-                assert(graph_output in graph_outputs)
+                assert graph_output in graph_outputs
                 step.input_names[step_idx] = graph_output
 
             # create empty graph with the values that will be available to the post-processing
@@ -165,7 +216,9 @@ class PrePostProcessor:
                 post_process_graph.output.append(o)
 
             for idx, step in enumerate(self.post_processors):
-                post_process_graph = connect_and_run(post_process_graph, step, self._post_processor_connections[idx])
+                post_process_graph = connect_and_run(
+                    post_process_graph, step, self._post_processor_connections[idx]
+                )
 
             name_nodes(post_process_graph, "post_process_")
 
@@ -176,17 +229,22 @@ class PrePostProcessor:
         # Make the output names nicer by removing prefixing from naming that occurred when applying the steps
         graph = PrePostProcessor.__cleanup_graph_output_names(graph)
 
-        opset_imports = [onnx.helper.make_operatorsetid(domain, opset) for domain, opset in get_opset_imports().items()]
+        opset_imports = [
+            onnx.helper.make_operatorsetid(domain, opset)
+            for domain, opset in get_opset_imports().items()
+        ]
         new_model = onnx.helper.make_model(graph, opset_imports=opset_imports)
 
         onnx.checker.check_model(new_model)
 
         return new_model
 
-    def __add_processing(self,
-                         processors: List[Step],
-                         processor_connections: List[List[IoMapEntry]],
-                         items: List[Union[Step, Tuple[Union[Step, str], List[IoMapEntry]]]]):
+    def __add_processing(
+        self,
+        processors: List[Step],
+        processor_connections: List[List[IoMapEntry]],
+        items: List[Union[Step, Tuple[Union[Step, str], List[IoMapEntry]]]],
+    ):
         """
         Add the pre/post processing steps and join with existing steps.
 
@@ -210,17 +268,23 @@ class PrePostProcessor:
                 step = item
             elif isinstance(item, tuple):
                 step_or_str, explicit_io_map_entries = item
-                step = self.__producer_from_step_or_str(step_or_str)  # throws if not found
+                step = self.__producer_from_step_or_str(
+                    step_or_str
+                )  # throws if not found
             else:
                 raise ValueError("Unexpected type " + str(type(item)))
 
             # start with implicit joins and replace with explicitly provided ones
             # this allows the user to specify the minimum number of manual joins.
-            io_map_entries = [None] * len(step.input_names)  # type: List[Union[None,IoMapEntry]]
+            io_map_entries = [None] * len(
+                step.input_names
+            )  # type: List[Union[None,IoMapEntry]]
             prev_step = None if len(processors) == 0 else processors[-1]
             if prev_step:
                 # default is connecting as many outputs from the previous step as possible
-                for i in range(0, min(len(prev_step.output_names), len(step.input_names))):
+                for i in range(
+                    0, min(len(prev_step.output_names), len(step.input_names))
+                ):
                     io_map_entries[i] = IoMapEntry(prev_step, i, i)
 
             # add explicit connections
@@ -231,23 +295,28 @@ class PrePostProcessor:
                     else:
                         producer = self.__producer_from_step_or_str(entry.producer)
 
-                    io_map_entries[entry.consumer_idx] = IoMapEntry(producer, entry.producer_idx, entry.consumer_idx)
+                    io_map_entries[entry.consumer_idx] = IoMapEntry(
+                        producer, entry.producer_idx, entry.consumer_idx
+                    )
 
             processors.append(step)
-            processor_connections.append([entry for entry in io_map_entries if entry is not None])
+            processor_connections.append(
+                [entry for entry in io_map_entries if entry is not None]
+            )
 
-    def __producer_from_step_or_str(self, entry: Union[Step,str]):
+    def __producer_from_step_or_str(self, entry: Union[Step, str]):
         if isinstance(entry, Step):
             return entry
         if isinstance(entry, str):
             # search for existing pre or post processing step by name. we do this as each Step is registered so
             # self.pre_processors and self.post_processors will only contain predecessor entries.
             # i.e. any match can is a valid producer Step.
-            match = (next((s for s in self.pre_processors if s.name == entry), None) or
-                     next((s for s in self.post_processors if s.name == entry), None))
+            match = next(
+                (s for s in self.pre_processors if s.name == entry), None
+            ) or next((s for s in self.post_processors if s.name == entry), None)
 
             if not match:
-                raise ValueError(f'Step named {entry} was not found')
+                raise ValueError(f"Step named {entry} was not found")
 
             return match
 
@@ -279,7 +348,7 @@ class PrePostProcessor:
             while clean_name.startswith(Step.prefix):
                 # output from last step will have one prefixing stage that adds Step._prefix + '_'
                 # e.g. '_ppp8_<orig_name>'
-                next_underscore = clean_name.find('_', 1)
+                next_underscore = clean_name.find("_", 1)
                 if next_underscore > 0:
                     # this check shouldn't be necessary as we always add the trailing '_' when prefixing...
                     if len(clean_name) > next_underscore + 1:
@@ -297,7 +366,9 @@ class PrePostProcessor:
 
             used_names.add(clean_name)
 
-            renamer = onnx.helper.make_node("Identity", [o.name], [clean_name], f"Rename {o.name}")
+            renamer = onnx.helper.make_node(
+                "Identity", [o.name], [clean_name], f"Rename {o.name}"
+            )
             fixes.node.append(renamer)
 
             new_output = fixes.output.add()

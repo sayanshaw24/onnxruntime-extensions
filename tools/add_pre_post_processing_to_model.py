@@ -1,20 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-# import abc
 import argparse
 import enum
-# import numpy as np
-import onnx
 import os
 #
 # from dataclasses import dataclass
-# from onnx import parser, version_converter
 from pathlib import Path
-from typing import List, Union
 
 from pre_post_processing import PrePostProcessor
-from pre_post_processing.Steps import *
+from pre_post_processing.steps import *
 from pre_post_processing.utils import create_named_value, IoMapEntry
 
 
