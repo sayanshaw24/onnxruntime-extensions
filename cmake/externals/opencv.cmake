@@ -141,3 +141,13 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
         set_target_properties(${p} PROPERTIES FOLDER "externals/opencv")
     endforeach()
 endif()
+
+# temporary hack. these values should come from emsdk\upstream\emscripten\cache\sysroot\include\emscripten\version.h
+# or alternatively we should patch the necessary opencv2 files to include that header
+if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    foreach(TARGET ${opencv_LIBS})
+        target_compile_definitions(${TARGET} PRIVATE __EMSCRIPTEN_major__=3)
+        target_compile_definitions(${TARGET} PRIVATE __EMSCRIPTEN_minor__=1)
+        target_compile_definitions(${TARGET} PRIVATE __EMSCRIPTEN_tiny__=26)
+    endforeach()
+endif()
