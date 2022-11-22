@@ -159,6 +159,7 @@ class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
 
         result_bytes = s.run(None, {'image': np.array(input_bytes)})[0]
 
+        # convert from jpg to RGB to remove any jpg encoding diffs
         result = np.array(Image.open(io.BytesIO(result_bytes)).convert('RGB'))
         expected = np.array(Image.open(expected_output_image_path).convert('RGB'))
 
