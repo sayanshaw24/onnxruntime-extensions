@@ -66,8 +66,10 @@ def _parse_arguments():
     )
 
     # Main arguments
-    parser.add_argument("--build_dir", type=Path, default=f"build/{platform.system()}",
-                        help="Path to the build directory.")
+    parser.add_argument("--build_dir", type=Path,
+                        # We set the default programmatically as it needs to take into account whether we're
+                        # cross-compiling
+                        help="Path to the build directory. Defaults to 'build/<target platform>'")
     parser.add_argument("--config", nargs="+", default=["Debug"],
                         choices=["Debug", "MinSizeRel", "Release", "RelWithDebInfo"],
                         help="Configuration(s) to build.")
@@ -119,9 +121,9 @@ def _parse_arguments():
     parser.add_argument("--android_abi", default="arm64-v8a", choices=["armeabi-v7a", "arm64-v8a", "x86", "x86_64"],
                         help="Specify the target Android Application Binary Interface (ABI)")
     parser.add_argument("--android_api", type=int, default=27, help="Android API Level, e.g. 21")
-    parser.add_argument("--android_sdk_path", type=Path, default=os.environ.get("ANDROID_HOME", ""),
+    parser.add_argument("--android_sdk_path", type=Path, default=os.environ.get("ANDROID_HOME"),
                         help="Path to the Android SDK")
-    parser.add_argument("--android_ndk_path", type=Path, default=os.environ.get("ANDROID_NDK_HOME", ""),
+    parser.add_argument("--android_ndk_path", type=Path, default=os.environ.get("ANDROID_NDK_HOME"),
                         help="Path to the Android NDK. Typically `<Android SDK>/ndk/<ndk_version>")
 
     # iOS options
@@ -176,6 +178,10 @@ def _parse_arguments():
     # Arguments needed by CI
     parser.add_argument("--cmake_path", default="cmake", type=Path, help="Path to the CMake program.")
 
+    parser.add_argument("--ctest_path", default="ctest",
+                        help="Optional path to the CTest program. If not provided the test programs will be run "
+                             "directly.",
+    )
     parser.add_argument("--cmake_generator",
                         choices=["Visual Studio 16 2019", "Visual Studio 17 2022", "Ninja"],
                         default="Visual Studio 17 2022" if is_windows() else None,
@@ -188,6 +194,23 @@ def _parse_arguments():
                              "  e.g. com.microsoft.extensions;1;ImageDecode,ImageEncode")
 
     args = parser.parse_args()
+
+    if not args.build_dir:
+        build_dir = f"build/{platform.system()}"
+
+        # override if we're cross-compiling
+        if args.android:
+            build_dir = "build/Android"
+        elif args.ios:
+            build_dir = "build/iOS"
+        elif args.arm:
+            build_dir = "build/arm"
+        elif args.arm64:
+            build_dir = "build/arm64"
+        elif args.arm64ec:
+            build_dir = "build/arm64ec"
+
+        args.build_dir = Path(build_dir)
 
     return args
 
@@ -216,7 +239,7 @@ def _get_build_config_dir(build_dir: Path, config: str):
 
 
 def _run_subprocess(args: List[str], cwd: Path = None, capture_stdout=False, shell=False, env=None,
-                    dll_path: Path = None, python_path: Path = None):
+                    python_path: Path = None):
 
     if isinstance(args, str):
         raise ValueError("args should be a sequence of strings, not a string")
@@ -225,18 +248,6 @@ def _run_subprocess(args: List[str], cwd: Path = None, capture_stdout=False, she
         env = {}
 
     my_env = os.environ.copy()
-    if dll_path:
-        dll_path = str(dll_path.resolve())
-        if is_windows():
-            if "PATH" in my_env:
-                my_env["PATH"] = dll_path + os.pathsep + my_env["PATH"]
-            else:
-                my_env["PATH"] = dll_path
-        else:
-            if "LD_LIBRARY_PATH" in my_env:
-                my_env["LD_LIBRARY_PATH"] += os.pathsep + dll_path
-            else:
-                my_env["LD_LIBRARY_PATH"] = dll_path
 
     if python_path:
         python_path = str(python_path.resolve())
@@ -286,7 +297,7 @@ def _generate_selected_ops_config(config_file: Path):
 def _generate_build_tree(cmake_path: Path,
                          source_dir: Path,
                          build_dir: Path,
-                         configs: List[str],
+                         configs: Set[str],
                          cmake_extra_defines: List[str],
                          args,
                          cmake_extra_args: List[str]
@@ -315,7 +326,6 @@ def _generate_build_tree(cmake_path: Path,
             "-DOCOS_ENABLE_CTEST=ON",
             "-DONNXRUNTIME_LIB_DIR=" + str(ort_lib_dir)
         ]
-
 
     if args.build_wasm:
         cmake_args += [
@@ -346,12 +356,11 @@ def _generate_build_tree(cmake_path: Path,
 
         cmake_args += [
             "-DOCOS_BUILD_ANDROID=ON",
-            "-DANDROID_NDK_VERSION=" + str(ndk_version),
             "-DCMAKE_TOOLCHAIN_FILE="
             + str((args.android_ndk_path / "build" / "cmake" / "android.toolchain.cmake").resolve(strict=True)),
+            "-DANDROID_NDK_VERSION=" + str(ndk_version),
             "-DANDROID_PLATFORM=android-" + str(args.android_api),
-            "-DANDROID_ABI=" + str(args.android_abi),
-            "-DANDROID_MIN_SDK=" + str(args.android_api)
+            "-DANDROID_ABI=" + str(args.android_abi)
         ]
 
     if args.ios:
@@ -444,6 +453,88 @@ def build_targets(args, cmake_path: Path, build_dir: Path, configs: Set[str], nu
         _run_subprocess(cmd_args, env=env)
 
 
+def _run_python_tests():
+    # TODO: Run the python tests in /python
+    pass
+
+
+def _run_android_tests(args, build_dir: Path, config: str, cwd: Path):
+    # TODO: Setup running tests using Android simulator and adb. See ORT build.py for example.
+    source_dir = REPO_DIR
+    pass
+
+
+def _run_ios_tests(args, config: str, cwd: Path):
+    # TODO: Setup running tests using xcode an iPhone simulator. See ORT build.py for example.
+    source_dir = REPO_DIR
+    pass
+
+
+def _run_cxx_tests(args, build_dir: Path, configs: Set[str]):
+    ctest_path = None if not args.ctest_path else _resolve_executable_path(args.ctest_path)
+
+    for config in configs:
+        log.info("Running tests for %s configuration", config)
+
+        cwd = _get_build_config_dir(build_dir, config)
+
+        if args.android:
+            _run_android_tests(args, build_dir, config, cwd)
+            continue
+        elif args.ios:
+            _run_ios_tests(args, config, cwd)
+            continue
+
+        if ctest_path:
+            ctest_cmd = [str(ctest_path), "--build-config", config, "--verbose", "--timeout", "10800"]
+            _run_subprocess(ctest_cmd, cwd=cwd)
+
+        else:
+            if is_windows():
+                # Get the "Google Test Adapter" for vstest.
+                if not (cwd / "GoogleTestAdapter.0.18.0").is_dir():
+                    _run_subprocess(
+                        [
+                            "nuget.exe",
+                            "restore",
+                            str(REPO_DIR / "test" / "packages.config"),
+                            "-ConfigFile",
+                            str(REPO_DIR / "test" / "NuGet.config"),
+                            "-PackagesDirectory",
+                            str(cwd),
+                        ]
+                    )
+
+                # test exes are in the bin/<config> subdirectory of the build output dir
+                # call resolve() to get the full path as we're going to execute in build_dir not cwd
+                test_dir = (cwd / "bin" / config).resolve()
+                adapter = (cwd / 'GoogleTestAdapter.0.18.0' / 'build' / '_common').resolve()
+
+                executables = [
+                    str(test_dir / "extensions_test.exe"),
+                    str(test_dir / "ocos_test.exe")
+                ]
+
+                _run_subprocess(
+                    [
+                        "vstest.console.exe",  # must be in the PATH. run this script from a VS dev shell.
+                        "--parallel",
+                        f"--TestAdapterPath:{str(adapter)}",
+                        "/Logger:trx",
+                        "/Enablecodecoverage",
+                        "/Platform:x64",
+                        f"/Settings:{str(REPO_DIR / 'test' / 'codeconv.runsettings')}",
+                    ]
+                    + executables,
+                    cwd=build_dir,
+                )
+
+            else:
+                executables = ["extensions_test", "ocos_test"]
+                for exe in executables:
+                    _run_subprocess([str(cwd / exe)], cwd=cwd)
+
+
 def main():
     log.debug("Command line arguments:\n  {}".format(" ".join(shlex.quote(arg) for arg in sys.argv[1:])))
 
@@ -474,6 +565,11 @@ def main():
             args.disable_wasm_exception_catching = True
         if args.test and args.disable_wasm_exception_catching and not args.minimal_build:
             raise UsageError("WebAssembly tests need exception catching enabled to run if it's not minimal build")
+
+    if args.android and is_windows():
+        if args.cmake_generator != "Ninja":
+            log.info("Setting cmake_generator to Ninja, which is required when cross-compiling Android on Windows.")
+            args.cmake_generator = "Ninja"
 
     configs = set(args.config)
 
@@ -572,9 +668,11 @@ def main():
         build_targets(args, cmake_path, build_dir, configs, num_parallel_jobs)
 
     if args.test:
-        _validate_unit_test_args(args)
-        # TODO: find build output dir and run the two test binaries
-        # run_unit_tests()
+        _run_python_tests()
+
+        if args.enable_unit_tests:
+            _validate_unit_test_args(args)
+            _run_cxx_tests(args, build_dir, configs)
 
     log.info("Build complete")
 
