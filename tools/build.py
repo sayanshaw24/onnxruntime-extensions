@@ -121,8 +121,8 @@ def _parse_arguments():
     parser.add_argument("--android_abi", default="arm64-v8a", choices=["armeabi-v7a", "arm64-v8a", "x86", "x86_64"],
                         help="Specify the target Android Application Binary Interface (ABI)")
     parser.add_argument("--android_api", type=int, default=27, help="Android API Level, e.g. 21")
-    parser.add_argument("--android_sdk_path", type=Path, default=os.environ.get("ANDROID_HOME"),
-                        help="Path to the Android SDK")
+    parser.add_argument("--android_home", type=Path, default=os.environ.get("ANDROID_HOME"),
+                        help="Path to the Android SDK.")
     parser.add_argument("--android_ndk_path", type=Path, default=os.environ.get("ANDROID_NDK_HOME"),
                         help="Path to the Android NDK. Typically `<Android SDK>/ndk/<ndk_version>")
 
@@ -342,15 +342,15 @@ def _generate_build_tree(cmake_path: Path,
 
     if args.android:
         if not args.android_ndk_path:
-            raise UsageError("android_ndk_path required to build for Android")
-        if not args.android_sdk_path:
-            raise UsageError("android_sdk_path required to build for Android")
+            raise UsageError("android_ndk_path is required to build for Android")
+        if not args.android_home:
+            raise UsageError("android_home is required to build for Android")
 
-        android_sdk_path = args.android_sdk_path.resolve(strict=True)
+        android_home = args.android_home.resolve(strict=True)
         android_ndk_path = args.android_ndk_path.resolve(strict=True)
 
-        if not android_sdk_path.is_dir() or not android_ndk_path.is_dir():
-            raise UsageError("Android SDK and NDK paths should be directories.")
+        if not android_home.is_dir() or not android_ndk_path.is_dir():
+            raise UsageError("Android home and NDK paths must be directories.")
 
         ndk_version = android_ndk_path.name  # NDK version is inferred from the folder name
 
@@ -424,7 +424,7 @@ def build_targets(args, cmake_path: Path, build_dir: Path, configs: Set[str], nu
 
     env = {}
     if args.android:
-        env["ANDROID_SDK_ROOT"] = str(args.android_sdk_path)
+        env["ANDROID_HOME"] = str(args.android_home)
         env["ANDROID_NDK_HOME"] = str(args.android_ndk_path)
 
     for config in configs:
