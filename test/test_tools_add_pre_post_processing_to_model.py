@@ -170,6 +170,11 @@ class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
         # we expect some variance from the floating point operations involved during Resize and conversion of the
         # original image to/from YCbCr. the different instructions used on different hardware can cause diffs, such as
         # whether avx512 is used or not.
+        if not np.allclose(expected, result, atol=1, rtol=0):
+            diffs = np.absolute(expected.astype(np.int) - result.astype(np.int))
+            total = np.sum(diffs)
+            print(f'Max diff:{diffs.max} Total diffs:{total}')
+            
         self.assertTrue(np.allclose(expected, result, atol=1, rtol=0))
 
 
