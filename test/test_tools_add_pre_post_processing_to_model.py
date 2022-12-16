@@ -173,8 +173,8 @@ class TestToolsAddPrePostProcessingToModel(unittest.TestCase):
         if not np.allclose(expected, result, atol=1, rtol=0):
             diffs = np.absolute(expected.astype(np.int) - result.astype(np.int))
             total = np.sum(diffs)
-            print(f'Max diff:{diffs.max} Total diffs:{total}')
-            
+            print(f'Max diff:{diffs.max()} Total diffs:{total}')
+
         self.assertTrue(np.allclose(expected, result, atol=1, rtol=0))
 
 
