@@ -1,20 +1,37 @@
-# If the oeprator needs the cpp exceptions supports, write down their names
-if (OCOS_ENABLE_GPT2_TOKENIZER)
-    # gpt2 tokenizer depends on nlohmann_json in onnxruntime, which is old and cannot disable exceptions.
-    # could remove this limit when the nlohmann_json is updated in onnxruntime.
-    message(FATAL_ERROR "GPT2_TOKENIZER operator needs c++ exceptions support")
-endif()
-if (OCOS_ENABLE_WORDPIECE_TOKENIZER)
-    # wordpiece tokenizer depends on nlohmann_json in onnxruntime, which is old and cannot disable exceptions.
-    # could remove this limit when the nlohmann_json is updated in onnxruntime.
-    message(FATAL_ERROR "WORDPIECE_TOKENIZER operator needs c++ exceptions support")
-endif()
-if (OCOS_ENABLE_BLINGFIRE)
-    message(FATAL_ERROR "BLINGFIRE operator needs c++ exceptions support")
-endif()
-if (OCOS_ENABLE_SPM_TOKENIZER)
-    message(FATAL_ERROR "SPM_TOKENIZER operator needs c++ exceptions support")
-endif()
-if (OCOS_ENABLE_CV2 || OCOS_ENABLE_OPENCV_CODECS || OCOS_ENABLE_VISION)
-    message(FATAL_ERROR "the operators depending on opencv needs c++ exceptions support")
-endif()
+
+
+macro SetExceptionsRequired()
+    set(_OCOS_EXCEPTIONS_REQUIRED OFF)
+    if (OCOS_ENABLE_GPT2_TOKENIZER ||
+        OCOS_ENABLE_WORDPIECE_TOKENIZER ||
+        OCOS_ENABLE_BLINGFIRE ||
+        OCOS_ENABLE_SPM_TOKENIZER ||
+        (OCOS_ENABLE_CV2 || OCOS_ENABLE_OPENCV_CODECS || OCOS_ENABLE_VISION))
+        set(_OCOS_EXCEPTIONS_REQUIRED ON)
+    endif()
+endmacro()
+
+macro ValidateExceptionSettings()
+    if (NOT OCOS_ENABLE_CPP_EXCEPTIONS)
+        # If the operator needs the cpp exceptions supports, write down their names
+        if (OCOS_ENABLE_GPT2_TOKENIZER)
+            # gpt2 tokenizer depends on nlohmann_json in onnxruntime, which is old and cannot disable exceptions.
+            # could remove this limit when the nlohmann_json is updated in onnxruntime.
+            message(FATAL_ERROR "GPT2_TOKENIZER operator needs C++ exceptions support")
+        endif()
+        if (OCOS_ENABLE_WORDPIECE_TOKENIZER)
+            # wordpiece tokenizer depends on nlohmann_json in onnxruntime, which is old and cannot disable exceptions.
+            # could remove this limit when the nlohmann_json is updated in onnxruntime.
+            message(FATAL_ERROR "WORDPIECE_TOKENIZER operator needs C++ exceptions support")
+        endif()
+        if (OCOS_ENABLE_BLINGFIRE)
+            message(FATAL_ERROR "BLINGFIRE operator needs C++ exceptions support")
+        endif()
+        if (OCOS_ENABLE_SPM_TOKENIZER)
+            message(FATAL_ERROR "SPM_TOKENIZER operator needs C++ exceptions support")
+        endif()
+        if (OCOS_ENABLE_CV2 || OCOS_ENABLE_OPENCV_CODECS || OCOS_ENABLE_VISION)
+            message(FATAL_ERROR "Operators depending on OpenCV need C++ exceptions support")
+        endif()
+    endif()
+endmacro()

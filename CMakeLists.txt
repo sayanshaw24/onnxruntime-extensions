@@ -130,6 +130,12 @@ endif()
 # External dependencies
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/externals ${PROJECT_SOURCE_DIR}/cmake)
 
+# PROJECT_IS_TOP_LEVEL is available until 3.21
+get_property(not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
+if(not_top)
+  set(_ONNXRUNTIME_EMBEDDED TRUE)
+endif()
+
 if(OCOS_ENABLE_SELECTED_OPLIST)
   # Need to ensure _selectedoplist.cmake file is already generated in folder: ${PROJECT_SOURCE_DIR}/cmake/
   # You could run gen_selectedops.py in folder: tools/ to generate _selectedoplist.cmake
@@ -138,8 +144,37 @@ if(OCOS_ENABLE_SELECTED_OPLIST)
   include(_selectedoplist)
 endif()
 
+set(_OCOS_EXCEPTIONS_REQUIRED OFF)
+include(noexcep_ops)
+SetExceptionsRequired()
+
+# Special case an embedded build with ORT exceptions disabled but custom ops that require exceptions.
+if(_ONNXRUNTIME_EMBEDDED && ORT_NO_EXCEPTIONS && _OCOS_EXCEPTIONS_REQUIRED)
+  if (NOT OCOS_ENABLE_CPP_EXCEPTIONS)
+    message(WARNING "Enabling C++ exception support as custom ops included in the build require.")
+    set(OCOS_ENABLE_CPP_EXCEPTIONS ON)
+  endif()
+
+  # undo the flags that ORT has set to disable exceptions.
+  # see https://github.com/microsoft/onnxruntime/blob/b1abb8c656c597bf221bd85682ae3d9e350d9aba/cmake/adjust_global_compile_flags.cmake#L160-L169
+  if (onnxruntime_DISABLE_EXCEPTIONS)
+    if(MSVC)
+      string(REGEX REPLACE "/EHs-c-" "/EHsc" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    else()
+      string(REPLACE "-fno-exceptions" "-fexceptions" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+      string(REPLACE "-fno-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+      string(REPLACE "-fno-asynchronous-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    endif()
+  endif()
+
+  # the ort-ext code has to provide a barrier between the exception enabled custom op code and ORT.
+  add_compile_definitions(OCOS_CONTAIN_EXCEPTIONS)
+endif()
+
 if(NOT OCOS_ENABLE_CPP_EXCEPTIONS)
-  include(noexcep_ops)
+  # make sure we're not building with a 3rd party library that requires exceptions
+  ValidateExceptionSettings()
+
   add_compile_definitions(OCOS_NO_EXCEPTIONS ORT_NO_EXCEPTIONS)
 
   if(MSVC)
@@ -151,14 +186,7 @@ if(NOT OCOS_ENABLE_CPP_EXCEPTIONS)
 endif()
 
 include(FetchContent)
-
-# PROJECT_IS_TOP_LEVEL is available until 3.21
-get_property(not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
-if(not_top)
-  set(_ONNXRUNTIME_EMBEDDED TRUE)
-endif()
 include(ext_ortlib)
-
 include(gsl)
 
 if(OCOS_ENABLE_RE2_REGEX)
