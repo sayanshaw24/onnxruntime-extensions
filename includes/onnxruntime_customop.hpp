@@ -9,56 +9,16 @@
 #include <cstddef>
 #include <array>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <utility>
 #include <type_traits>
 
-#ifdef ORT_NO_EXCEPTIONS
-#include <iostream>
-#endif
-
 #include "onnxruntime_c_api.h"
 
-
+#include "exceptions.h"
 
 namespace OrtW {
-
-// All C++ methods that can fail will throw an exception of this type
-struct Exception : std::exception {
-  Exception(std::string&& string, OrtErrorCode code) : message_{std::move(string)}, code_{code} {}
-
-  OrtErrorCode GetOrtErrorCode() const { return code_; }
-  const char* what() const noexcept override { return message_.c_str(); }
-
- private:
-  std::string message_;
-  OrtErrorCode code_;
-};
-
-#ifdef ORT_NO_EXCEPTIONS
-#define ORTX_CXX_API_THROW(string, code)       \
-  do {                                        \
-    std::cerr << OrtW::Exception(string, code) \
-                     .what()                  \
-              << std::endl;                   \
-    abort();                                  \
-  } while (false)
-#else
-#define ORTX_CXX_API_THROW(string, code) \
-  throw OrtW::Exception(string, code)
-#endif
-
-inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
-  if (status) {
-    std::string error_message = ort.GetErrorMessage(status);
-    OrtErrorCode error_code = ort.GetErrorCode(status);
-    ort.ReleaseStatus(status);
-    ORTX_CXX_API_THROW(std::move(error_message), error_code);
-  }
-}
-
 
 //
 // Custom OPs (only needed to implement custom OPs)
@@ -100,18 +60,44 @@ template <typename TOp, typename TKernel>
 struct CustomOpBase : OrtCustomOp {
   CustomOpBase() {
     OrtCustomOp::version = 10;  // The minimum ORT version supported
-    OrtCustomOp::CreateKernel = [](const OrtCustomOp* this_, const OrtApi* api, const OrtKernelInfo* info) { return static_cast<const TOp*>(this_)->CreateKernel(*api, info); };
-    OrtCustomOp::GetName = [](const OrtCustomOp* this_) { return static_cast<const TOp*>(this_)->GetName(); };
+    OrtCustomOp::CreateKernel = [](const OrtCustomOp* this_, const OrtApi* api, const OrtKernelInfo* info) {
+      void* result = nullptr;
+      API_IMPL_BEGIN
+      result = static_cast<const TOp*>(this_)->CreateKernel(*api, info);
+      API_IMPL_END("OrtCustomOp::CreateKernel");
+      return result;
+    };
 
-    OrtCustomOp::GetExecutionProviderType = [](const OrtCustomOp* this_) { return static_cast<const TOp*>(this_)->GetExecutionProviderType(); };
+    OrtCustomOp::GetName = [](const OrtCustomOp* this_) noexcept {
+      return static_cast<const TOp*>(this_)->GetName();
+    };
 
-    OrtCustomOp::GetInputTypeCount = [](const OrtCustomOp* this_) { return static_cast<const TOp*>(this_)->GetInputTypeCount(); };
-    OrtCustomOp::GetInputType = [](const OrtCustomOp* this_, size_t index) { return static_cast<const TOp*>(this_)->GetInputType(index); };
+    OrtCustomOp::GetExecutionProviderType = [](const OrtCustomOp* this_) noexcept {
+      return static_cast<const TOp*>(this_)->GetExecutionProviderType();
+    };
 
-    OrtCustomOp::GetOutputTypeCount = [](const OrtCustomOp* this_) { return static_cast<const TOp*>(this_)->GetOutputTypeCount(); };
-    OrtCustomOp::GetOutputType = [](const OrtCustomOp* this_, size_t index) { return static_cast<const TOp*>(this_)->GetOutputType(index); };
+    OrtCustomOp::GetInputTypeCount = [](const OrtCustomOp* this_) noexcept {
+      return static_cast<const TOp*>(this_)->GetInputTypeCount();
+    };
 
-    OrtCustomOp::KernelCompute = [](void* op_kernel, OrtKernelContext* context) { static_cast<TKernel*>(op_kernel)->Compute(context); };
+    OrtCustomOp::GetInputType = [](const OrtCustomOp* this_, size_t index) {
+      return static_cast<const TOp*>(this_)->GetInputType(index);
+    };
+
+    OrtCustomOp::GetOutputTypeCount = [](const OrtCustomOp* this_) noexcept {
+      return static_cast<const TOp*>(this_)->GetOutputTypeCount();
+    };
+
+    OrtCustomOp::GetOutputType = [](const OrtCustomOp* this_, size_t index) {
+      return static_cast<const TOp*>(this_)->GetOutputType(index);
+    };
+
+    OrtCustomOp::KernelCompute = [](void* op_kernel, OrtKernelContext* context) {
+      // API_IMPL_BEGIN
+      static_cast<TKernel*>(op_kernel)->Compute(context);
+      // API_IMPL_END("OrtCustomOp::KernelCompute");
+    };
+
 #if defined(_MSC_VER) && !defined(__clang__)
 #pragma warning(push)
 #pragma warning(disable : 26409)
@@ -120,8 +106,13 @@ struct CustomOpBase : OrtCustomOp {
 #if defined(_MSC_VER) && !defined(__clang__)
 #pragma warning(pop)
 #endif
-    OrtCustomOp::GetInputCharacteristic = [](const OrtCustomOp* this_, size_t index) { return static_cast<const TOp*>(this_)->GetInputCharacteristic(index); };
-    OrtCustomOp::GetOutputCharacteristic = [](const OrtCustomOp* this_, size_t index) { return static_cast<const TOp*>(this_)->GetOutputCharacteristic(index); };
+    OrtCustomOp::GetInputCharacteristic = [](const OrtCustomOp* this_, size_t index) {
+      return static_cast<const TOp*>(this_)->GetInputCharacteristic(index);
+    };
+
+    OrtCustomOp::GetOutputCharacteristic = [](const OrtCustomOp* this_, size_t index) {
+      return static_cast<const TOp*>(this_)->GetOutputCharacteristic(index);
+    };
   }
 
   template <typename... Args>

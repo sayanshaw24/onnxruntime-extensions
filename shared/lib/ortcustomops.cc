@@ -65,10 +65,13 @@ extern "C" bool ORT_API_CALL AddExternalCustomOp(const OrtCustomOp* c_op) {
 }
 
 extern "C" ORTX_EXPORT OrtStatus* ORT_API_CALL RegisterCustomOps(OrtSessionOptions* options, const OrtApiBase* api) {
+  OrtStatus* status = nullptr;
+
+  API_IMPL_BEGIN
+
   OrtCustomOpDomain* domain = nullptr;
   const OrtApi* ortApi = api->GetApi(ORT_API_VERSION);
   std::set<std::string> pyop_nameset;
-  OrtStatus* status = nullptr;
 
 #if defined(PYTHON_OP_SUPPORT)
   if (status = RegisterPythonDomainAndOps(options, ortApi); status) {
@@ -170,5 +173,9 @@ extern "C" ORTX_EXPORT OrtStatus* ORT_API_CALL RegisterCustomOps(OrtSessionOptio
     }
   }
 
-  return ortApi->AddCustomOpDomain(options, domain);
+  status = ortApi->AddCustomOpDomain(options, domain);
+
+  API_IMPL_END("RegisterCustomOps");
+
+  return status;
 }

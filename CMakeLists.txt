@@ -182,7 +182,7 @@ macro(standardize_output_folder bin_target)
 endmacro()
 
 # ### scan all source files
-file(GLOB TARGET_SRC "operators/*.cc" "operators/*.h")
+file(GLOB TARGET_SRC "operators/*.cc" "operators/*.h" "includes/*.h*")
 
 if(OCOS_ENABLE_TF_STRING)
   set(farmhash_SOURCE_DIR ${PROJECT_SOURCE_DIR}/cmake/externals/farmhash)
