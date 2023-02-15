@@ -20,7 +20,7 @@ struct Exception : std::exception {
   OrtErrorCode code_;
 };
 
-#ifdef ORT_NO_EXCEPTIONS
+#ifdef OCOS_NO_EXCEPTIONS
 #define ORTX_CXX_API_THROW(string, code)                            \
   do {                                                              \
     std::cerr << OrtW::Exception(string, code).what() << std::endl; \
@@ -56,31 +56,24 @@ inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
 
 // macros to wrap entry points that ORT calls where we may need to prevent exceptions propagating upwards to ORT
 #define API_IMPL_BEGIN \
-  do {                 \
-    OCOS_TRY {
+  OCOS_TRY {
 // if we have to contain exceptions, log and abort().
-// TODO: Would be nicer if KernelCompute returned a status so we could gracefully handle an error.
 #ifdef OCOS_CONTAIN_EXCEPTIONS
-#define API_IMPL_END(funcname)                                                  \
-  }                                                                             \
-  OCOS_CATCH(const std::exception& ex) {                                        \
-    OCOS_HANDLE_EXCEPTION([&]() {                                               \
-      std::cerr << "Exception in " << funcname << ": " << ex.Message() << "\n"; \
-      abort();                                                                  \
-    });                                                                         \
-  }                                                                             \
-  }                                                                             \
-  while (false)
+#define API_IMPL_END(funcname)                                               \
+  }                                                                          \
+  OCOS_CATCH(const std::exception& ex) {                                     \
+    OCOS_HANDLE_EXCEPTION([&]() {                                            \
+      std::cerr << "Exception in " << funcname << ": " << ex.what() << "\n"; \
+      abort();                                                               \
+    });                                                                      \
+  }
 #else
-
-// rethrow. funcname is ignore in this case
+// rethrow. funcname is ignored in this case
 #define API_IMPL_END(funcname)           \
   }                                      \
   OCOS_CATCH(const std::exception& ex) { \
     OCOS_HANDLE_EXCEPTION([&]() {        \
       OCOS_RETHROW;                      \
     });                                  \
-  }                                      \
-  }                                      \
-  while (false)
+  }
 #endif

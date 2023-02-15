@@ -7,6 +7,8 @@
 
 #include "gtest/gtest.h"
 
+#include "exceptions.h"
+
 #define TEST_MAIN main
 
 #if defined(__APPLE__)

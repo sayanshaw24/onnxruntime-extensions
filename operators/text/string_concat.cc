@@ -8,7 +8,6 @@
 #include <codecvt>
 #include <algorithm>
 
-
 KernelStringConcat::KernelStringConcat(const OrtApi& api) : BaseKernel(api) {
 }
 

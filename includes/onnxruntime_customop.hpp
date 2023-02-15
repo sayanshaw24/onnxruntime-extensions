@@ -64,7 +64,7 @@ struct CustomOpBase : OrtCustomOp {
       void* result = nullptr;
       API_IMPL_BEGIN
       result = static_cast<const TOp*>(this_)->CreateKernel(*api, info);
-      API_IMPL_END("OrtCustomOp::CreateKernel");
+      API_IMPL_END("OrtCustomOp::CreateKernel")
       return result;
     };
 
@@ -93,9 +93,9 @@ struct CustomOpBase : OrtCustomOp {
     };
 
     OrtCustomOp::KernelCompute = [](void* op_kernel, OrtKernelContext* context) {
-      // API_IMPL_BEGIN
+      API_IMPL_BEGIN
       static_cast<TKernel*>(op_kernel)->Compute(context);
-      // API_IMPL_END("OrtCustomOp::KernelCompute");
+      API_IMPL_END("OrtCustomOp::KernelCompute")
     };
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -127,6 +127,9 @@ struct CustomOpBase : OrtCustomOp {
 #endif
   }
 
+  // TODO: Make all the kernels consistent and take `api` and `info` as args so we don't need a CreateKernel variant
+  // that drops the `info`. If they all populate info_ we don't need checks the BaseKernel methods that
+  // info_ != nullptr.
   void* CreateKernel(const OrtApi& api, const OrtKernelInfo* info) const {
     return CreateKernelImpl(api);
   }

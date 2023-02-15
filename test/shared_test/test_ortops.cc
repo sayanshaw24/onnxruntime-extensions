@@ -188,11 +188,11 @@ void GetTensorMutableDataString(const OrtApi& api, const OrtValue* value, std::v
   OrtTensorDimensions dimensions(OrtW::CustomOpApi(api), value);
   size_t len = static_cast<size_t>(dimensions.Size());
   size_t data_len;
-  Ort::ThrowOnError(api, api.GetStringTensorDataLength(value, &data_len));
+  OrtW::ThrowOnError(api, api.GetStringTensorDataLength(value, &data_len));
   output.resize(len);
   std::vector<char> result(data_len + len + 1, '\0');
   std::vector<size_t> offsets(len);
-  Ort::ThrowOnError(api, api.GetStringTensorContent(value, (void*)result.data(), data_len, offsets.data(), offsets.size()));
+  OrtW::ThrowOnError(api, api.GetStringTensorContent(value, (void*)result.data(), data_len, offsets.data(), offsets.size()));
   output.resize(len);
   for (int64_t i = (int64_t)len - 1; i >= 0; --i) {
     if (i < len - 1)

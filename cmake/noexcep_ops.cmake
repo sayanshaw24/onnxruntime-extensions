@@ -1,17 +1,15 @@
-
-
-macro SetExceptionsRequired()
+macro(SetExceptionsRequired)
     set(_OCOS_EXCEPTIONS_REQUIRED OFF)
-    if (OCOS_ENABLE_GPT2_TOKENIZER ||
-        OCOS_ENABLE_WORDPIECE_TOKENIZER ||
-        OCOS_ENABLE_BLINGFIRE ||
-        OCOS_ENABLE_SPM_TOKENIZER ||
-        (OCOS_ENABLE_CV2 || OCOS_ENABLE_OPENCV_CODECS || OCOS_ENABLE_VISION))
+    if (OCOS_ENABLE_GPT2_TOKENIZER OR
+        OCOS_ENABLE_WORDPIECE_TOKENIZER OR
+        OCOS_ENABLE_BLINGFIRE OR
+        OCOS_ENABLE_SPM_TOKENIZER OR
+        (OCOS_ENABLE_CV2 OR OCOS_ENABLE_OPENCV_CODECS OR OCOS_ENABLE_VISION))
         set(_OCOS_EXCEPTIONS_REQUIRED ON)
     endif()
 endmacro()
 
-macro ValidateExceptionSettings()
+macro(ValidateExceptionSettings)
     if (NOT OCOS_ENABLE_CPP_EXCEPTIONS)
         # If the operator needs the cpp exceptions supports, write down their names
         if (OCOS_ENABLE_GPT2_TOKENIZER)
@@ -30,7 +28,7 @@ macro ValidateExceptionSettings()
         if (OCOS_ENABLE_SPM_TOKENIZER)
             message(FATAL_ERROR "SPM_TOKENIZER operator needs C++ exceptions support")
         endif()
-        if (OCOS_ENABLE_CV2 || OCOS_ENABLE_OPENCV_CODECS || OCOS_ENABLE_VISION)
+        if (OCOS_ENABLE_CV2 OR OCOS_ENABLE_OPENCV_CODECS OR OCOS_ENABLE_VISION)
             message(FATAL_ERROR "Operators depending on OpenCV need C++ exceptions support")
         endif()
     endif()

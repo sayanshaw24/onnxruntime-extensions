@@ -149,7 +149,7 @@ include(noexcep_ops)
 SetExceptionsRequired()
 
 # Special case an embedded build with ORT exceptions disabled but custom ops that require exceptions.
-if(_ONNXRUNTIME_EMBEDDED && ORT_NO_EXCEPTIONS && _OCOS_EXCEPTIONS_REQUIRED)
+if(_ONNXRUNTIME_EMBEDDED AND ORT_NO_EXCEPTIONS AND _OCOS_EXCEPTIONS_REQUIRED)
   if (NOT OCOS_ENABLE_CPP_EXCEPTIONS)
     message(WARNING "Enabling C++ exception support as custom ops included in the build require.")
     set(OCOS_ENABLE_CPP_EXCEPTIONS ON)
