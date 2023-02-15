@@ -150,6 +150,10 @@ SetExceptionsRequired()
 
 # Special case an embedded build with ORT exceptions disabled but custom ops that require exceptions.
 if(_ONNXRUNTIME_EMBEDDED AND ORT_NO_EXCEPTIONS AND _OCOS_EXCEPTIONS_REQUIRED)
+  message(STATUS "Embedded build as part of ONNX Runtime with exceptions disabled. "
+                 "Extensions but be built with exceptions enabled due to included custom ops using 3rd party libraries "
+                 "that require exceptions.")
+
   if (NOT OCOS_ENABLE_CPP_EXCEPTIONS)
     message(WARNING "Enabling C++ exception support as custom ops included in the build require.")
     set(OCOS_ENABLE_CPP_EXCEPTIONS ON)
@@ -157,14 +161,12 @@ if(_ONNXRUNTIME_EMBEDDED AND ORT_NO_EXCEPTIONS AND _OCOS_EXCEPTIONS_REQUIRED)
 
   # undo the flags that ORT has set to disable exceptions.
   # see https://github.com/microsoft/onnxruntime/blob/b1abb8c656c597bf221bd85682ae3d9e350d9aba/cmake/adjust_global_compile_flags.cmake#L160-L169
-  if (onnxruntime_DISABLE_EXCEPTIONS)
-    if(MSVC)
-      string(REGEX REPLACE "/EHs-c-" "/EHsc" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    else()
-      string(REPLACE "-fno-exceptions" "-fexceptions" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-      string(REPLACE "-fno-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-      string(REPLACE "-fno-asynchronous-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-    endif()
+  if(MSVC)
+    string(REGEX REPLACE "/EHs-c-" "/EHsc" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  else()
+    string(REPLACE "-fno-exceptions" "-fexceptions" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    string(REPLACE "-fno-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    string(REPLACE "-fno-asynchronous-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   endif()
 
   # the ort-ext code has to provide a barrier between the exception enabled custom op code and ORT.
