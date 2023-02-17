@@ -48,6 +48,7 @@ struct Exception : std::exception {
     });                                                                      \
   }
 
+#define OCOS_NO_EXCEPTIONS 1
 #ifdef OCOS_NO_EXCEPTIONS
 #define ORTX_CXX_API_THROW(string, code)                            \
   do {                                                              \
