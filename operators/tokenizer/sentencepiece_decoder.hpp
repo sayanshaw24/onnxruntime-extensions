@@ -9,8 +9,21 @@
 #include "sentencepiece_processor.h"
 #include "sentencepiece_model.pb.h"
 
+#define API_IMPL_BEGIN \
+  OCOS_TRY {
+#define API_IMPL_END(funcname)                                               \
+  }                                                                          \
+  OCOS_CATCH(const std::exception& ex) {                                     \
+    OCOS_HANDLE_EXCEPTION([&]() {                                            \
+      std::cerr << "Exception in " << funcname << ": " << ex.what() << "\n"; \
+      abort();                                                               \
+    });                                                                      \
+  }
+
+
 struct KernelSentencepieceDecoder : BaseKernel {
   KernelSentencepieceDecoder(const OrtApi& api, const OrtKernelInfo* info) : BaseKernel(api, info) {
+    API_IMPL_BEGIN
     std::string model_blob = ort_.KernelInfoGetAttribute<std::string>(info, "model");
     sentencepiece::ModelProto model_proto;
     model_proto.ParseFromArray(model_blob.data(), static_cast<int>(model_blob.size()));
@@ -21,9 +34,11 @@ struct KernelSentencepieceDecoder : BaseKernel {
                             (int)status.code(), ". Message is '", status.error_message(), "'."),
                         ORT_INVALID_PROTOBUF);
     }
+    API_IMPL_END("KernelSentencepieceDecoder::KernelSentencepieceDecoder")
   }
 
   void Compute(OrtKernelContext* context) {
+    API_IMPL_BEGIN
     const OrtValue* ids = ort_.KernelContext_GetInput(context, 0);
     const int64_t* p_ids = ort_.GetTensorData<int64_t>(ids);
     OrtTensorDimensions ids_dim(ort_, ids);
@@ -47,6 +62,7 @@ struct KernelSentencepieceDecoder : BaseKernel {
     std::vector<std::string> result = {decoded_string};
     OrtValue* output = ort_.KernelContext_GetOutput(context, 0, output_dim.data(), output_dim.size());
     FillTensorDataString(api_, ort_, context, result, output);
+    API_IMPL_END("KernelSentencepieceDecoder::Compute")
   }
 
  private:
@@ -55,7 +71,9 @@ struct KernelSentencepieceDecoder : BaseKernel {
 
 struct CustomOpSentencepieceDecoder : OrtW::CustomOpBase<CustomOpSentencepieceDecoder, KernelSentencepieceDecoder> {
   void* CreateKernel(const OrtApi& api, const OrtKernelInfo* info) const {
+    API_IMPL_BEGIN
     return CreateKernelImpl(api, info);
+    API_IMPL_END("CustomOpSentencepieceDecoder::CreateKernel")
   }
 
   const char* GetName() const {

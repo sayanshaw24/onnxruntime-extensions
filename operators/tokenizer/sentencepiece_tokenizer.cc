@@ -8,6 +8,7 @@
 #include "base64.h"
 
 KernelSentencepieceTokenizer::KernelSentencepieceTokenizer(const OrtApi& api, const OrtKernelInfo* info) : BaseKernel(api, info) {
+  API_IMPL_BEGIN
   std::string model_as_string = ort_.KernelInfoGetAttribute<std::string>(info, "model");
   sentencepiece::ModelProto model_proto;
   std::vector<uint8_t> model_as_bytes;
@@ -21,6 +22,8 @@ KernelSentencepieceTokenizer::KernelSentencepieceTokenizer(const OrtApi& api, co
     ORTX_CXX_API_THROW(MakeString(
         "Failed to create SentencePieceProcessor instance. Error code is ",
         (int)status.code(), ". Message is '", status.error_message(), "'."), ORT_FAIL);
+
+  API_IMPL_END("KernelSentencepieceTokenizer::KernelSentencepieceTokenizer")
 }
 
 static void _check_dimension_constant(OrtW::CustomOpApi ort, const OrtValue* ort_value, const char* name) {
@@ -31,6 +34,7 @@ static void _check_dimension_constant(OrtW::CustomOpApi ort, const OrtValue* ort
 }
 
 void KernelSentencepieceTokenizer::Compute(OrtKernelContext* context) {
+  API_IMPL_BEGIN
   // Update with the new API
   const OrtValue* ort_input = ort_.KernelContext_GetInput(context, 0);
   std::vector<std::string> str_input;
@@ -100,10 +104,14 @@ void KernelSentencepieceTokenizer::Compute(OrtKernelContext* context) {
   memcpy(ptr_content, content.data(), content.size() * sizeof(int));
   int64_t* ptr_indices = ort_.GetTensorMutableData<int64_t>(out_indices);
   memcpy(ptr_indices, indices.data(), indices.size() * sizeof(int64_t));
+
+  API_IMPL_END("KernelSentencepieceTokenizer::Compute")
 }
 
 void* CustomOpSentencepieceTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo* info) const {
+  API_IMPL_BEGIN
   return CreateKernelImpl(api, info);
+  API_IMPL_END("CustomOpSentencepieceTokenizer::CreateKernel")
 };
 
 const char* CustomOpSentencepieceTokenizer::GetName() const {
@@ -115,6 +123,7 @@ size_t CustomOpSentencepieceTokenizer::GetInputTypeCount() const {
 };
 
 ONNXTensorElementDataType CustomOpSentencepieceTokenizer::GetInputType(size_t index) const {
+  API_IMPL_BEGIN
   switch (index) {
     case 0:
       return ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING;
@@ -129,6 +138,7 @@ ONNXTensorElementDataType CustomOpSentencepieceTokenizer::GetInputType(size_t in
     default:
       ORTX_CXX_API_THROW(MakeString("Unexpected input index ", index), ORT_FAIL);
   }
+  API_IMPL_END("CustomOpSentencepieceTokenizer::GetInputType"")
 };
 
 size_t CustomOpSentencepieceTokenizer::GetOutputTypeCount() const {
@@ -136,6 +146,7 @@ size_t CustomOpSentencepieceTokenizer::GetOutputTypeCount() const {
 };
 
 ONNXTensorElementDataType CustomOpSentencepieceTokenizer::GetOutputType(size_t index) const {
+  API_IMPL_BEGIN
   switch (index) {
     case 0:
       return ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32;
@@ -144,4 +155,5 @@ ONNXTensorElementDataType CustomOpSentencepieceTokenizer::GetOutputType(size_t i
     default:
       ORTX_CXX_API_THROW(MakeString("[SentencepieceTokenizer] Unexpected output index ", index), ORT_FAIL);
   }
+  API_IMPL_END("CustomOpSentencepieceTokenizer::GetOutputType")
 };
