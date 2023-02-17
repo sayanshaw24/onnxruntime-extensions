@@ -9,17 +9,6 @@
 #include "sentencepiece_processor.h"
 #include "sentencepiece_model.pb.h"
 
-#define API_IMPL_BEGIN \
-  OCOS_TRY {
-#define API_IMPL_END(funcname)                                               \
-  }                                                                          \
-  OCOS_CATCH(const std::exception& ex) {                                     \
-    OCOS_HANDLE_EXCEPTION([&]() {                                            \
-      std::cerr << "Exception in " << funcname << ": " << ex.what() << "\n"; \
-      abort();                                                               \
-    });                                                                      \
-  }
-
 
 struct KernelSentencepieceDecoder : BaseKernel {
   KernelSentencepieceDecoder(const OrtApi& api, const OrtKernelInfo* info) : BaseKernel(api, info) {

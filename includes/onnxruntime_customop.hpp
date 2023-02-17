@@ -37,17 +37,39 @@ struct Exception : std::exception {
   OrtErrorCode code_;
 };
 
-#ifdef ORT_NO_EXCEPTIONS
-#define ORTX_CXX_API_THROW(string, code)       \
-  do {                                        \
-    std::cerr << OrtW::Exception(string, code) \
-                     .what()                  \
-              << std::endl;                   \
-    abort();                                  \
+#define API_IMPL_BEGIN \
+  OCOS_TRY {
+#define API_IMPL_END(funcname)                                               \
+  }                                                                          \
+  OCOS_CATCH(const std::exception& ex) {                                     \
+    OCOS_HANDLE_EXCEPTION([&]() {                                            \
+      std::cerr << "Exception in " << funcname << ": " << ex.what() << "\n"; \
+      abort();                                                               \
+    });                                                                      \
+  }
+
+#ifdef OCOS_NO_EXCEPTIONS
+#define ORTX_CXX_API_THROW(string, code)                            \
+  do {                                                              \
+    std::cerr << OrtW::Exception(string, code).what() << std::endl; \
+    abort();                                                        \
   } while (false)
+
+#define OCOS_TRY if (true)
+#define OCOS_CATCH(x) else if (false)
+#define OCOS_RETHROW
+// In order to ignore the catch statement when a specific exception (not ... ) is caught and referred
+// in the body of the catch statements, it is necessary to wrap the body of the catch statement into
+// a lambda function. otherwise the exception referred will be undefined and cause build break
+#define OCOS_HANDLE_EXCEPTION(func)
 #else
 #define ORTX_CXX_API_THROW(string, code) \
   throw OrtW::Exception(string, code)
+
+#define OCOS_TRY try
+#define OCOS_CATCH(x) catch (x)
+#define OCOS_RETHROW throw;
+#define OCOS_HANDLE_EXCEPTION(func) func()
 #endif
 
 inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
