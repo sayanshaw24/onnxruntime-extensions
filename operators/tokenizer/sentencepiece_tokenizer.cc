@@ -18,16 +18,16 @@ KernelSentencepieceTokenizer::KernelSentencepieceTokenizer(const OrtApi& api, co
   }
   sentencepiece::util::Status status = tokenizer_.Load(model_proto);
   if (!status.ok())
-    throw std::runtime_error(MakeString(
+    ORTX_CXX_API_THROW(MakeString(
         "Failed to create SentencePieceProcessor instance. Error code is ",
-        (int)status.code(), ". Message is '", status.error_message(), "'."));
+        (int)status.code(), ". Message is '", status.error_message(), "'."), ORT_FAIL);
 }
 
 static void _check_dimension_constant(OrtW::CustomOpApi ort, const OrtValue* ort_value, const char* name) {
   OrtTensorDimensions dimensions(ort, ort_value);
   if (dimensions.size() != 1 || dimensions[0] != 1)
-    throw std::runtime_error(MakeString(
-        name, " must contain only one element. It has ", dimensions.size(), " dimensions."));
+    ORTX_CXX_API_THROW(MakeString(
+        name, " must contain only one element. It has ", dimensions.size(), " dimensions."), ORT_FAIL);
 }
 
 void KernelSentencepieceTokenizer::Compute(OrtKernelContext* context) {
@@ -64,8 +64,7 @@ void KernelSentencepieceTokenizer::Compute(OrtKernelContext* context) {
   for (size_t i = 0; i < str_input.size(); ++i) {
     std::vector<int> inloop;
     if (!tokenizer_.Encode(str_input[i].c_str(), &inloop).ok())
-      throw std::runtime_error(MakeString(
-          "Unable to encode string '", str_input[i], "'."));
+      ORTX_CXX_API_THROW(MakeString("Unable to encode string '", str_input[i], "'."), ORT_FAIL);
     indices.push_back(content.size());
 
     if (*p_add_rev) {
@@ -128,7 +127,7 @@ ONNXTensorElementDataType CustomOpSentencepieceTokenizer::GetInputType(size_t in
     case 5:
       return ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL;
     default:
-      throw std::runtime_error(MakeString("Unexpected input index ", index));
+      ORTX_CXX_API_THROW(MakeString("Unexpected input index ", index), ORT_FAIL);
   }
 };
 
@@ -143,6 +142,6 @@ ONNXTensorElementDataType CustomOpSentencepieceTokenizer::GetOutputType(size_t i
     case 1:
       return ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
     default:
-      throw std::runtime_error(MakeString("[SentencepieceTokenizer] Unexpected output index ", index));
+      ORTX_CXX_API_THROW(MakeString("[SentencepieceTokenizer] Unexpected output index ", index), ORT_FAIL);
   }
 };
