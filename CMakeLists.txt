@@ -132,7 +132,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/externals ${PROJECT_SO
 
 # PROJECT_IS_TOP_LEVEL is available until 3.21
 get_property(not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
-if(not_top)
+if(not_top AND ONNXRUNTIME_ROOT)
   set(_ONNXRUNTIME_EMBEDDED TRUE)
 endif()
 
