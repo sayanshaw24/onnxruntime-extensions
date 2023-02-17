@@ -37,6 +37,20 @@ struct Exception : std::exception {
   OrtErrorCode code_;
 };
 
+// in the test build and ocos code annot throw
+#define ORTX_CXX_API_THROW(string, code)                            \
+  do {                                                              \
+    std::cerr << OrtW::Exception(string, code).what() << std::endl; \
+    abort();                                                        \
+  } while (false)
+
+
+// but where we selectively enable exceptions we need to try/catch in the code
+#define OCOS_TRY try
+#define OCOS_CATCH(x) catch (x)
+#define OCOS_RETHROW throw;
+#define OCOS_HANDLE_EXCEPTION(func) func()
+
 #define API_IMPL_BEGIN \
   OCOS_TRY {
 #define API_IMPL_END(funcname)                                               \
@@ -47,31 +61,6 @@ struct Exception : std::exception {
       abort();                                                               \
     });                                                                      \
   }
-
-#define OCOS_NO_EXCEPTIONS 1
-#ifdef OCOS_NO_EXCEPTIONS
-#define ORTX_CXX_API_THROW(string, code)                            \
-  do {                                                              \
-    std::cerr << OrtW::Exception(string, code).what() << std::endl; \
-    abort();                                                        \
-  } while (false)
-
-#define OCOS_TRY if (true)
-#define OCOS_CATCH(x) else if (false)
-#define OCOS_RETHROW
-// In order to ignore the catch statement when a specific exception (not ... ) is caught and referred
-// in the body of the catch statements, it is necessary to wrap the body of the catch statement into
-// a lambda function. otherwise the exception referred will be undefined and cause build break
-#define OCOS_HANDLE_EXCEPTION(func)
-#else
-#define ORTX_CXX_API_THROW(string, code) \
-  throw OrtW::Exception(string, code)
-
-#define OCOS_TRY try
-#define OCOS_CATCH(x) catch (x)
-#define OCOS_RETHROW throw;
-#define OCOS_HANDLE_EXCEPTION(func) func()
-#endif
 
 inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
   if (status) {
