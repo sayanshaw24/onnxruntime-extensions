@@ -11,12 +11,13 @@
 namespace OrtW {
 // All C++ methods that can fail will throw an exception of this type
 struct Exception : std::exception {
-  Exception(const std::string& string, OrtErrorCode code)
-      : std::exception(string.c_str()), code_{code} {}
+  Exception(std::string&& string, OrtErrorCode code) : message_{std::move(string)}, code_{code} {}
 
   OrtErrorCode GetOrtErrorCode() const { return code_; }
+  const char* what() const noexcept override { return message_.c_str(); }
 
  private:
+  std::string message_;
   OrtErrorCode code_;
 };
 
