@@ -138,7 +138,7 @@ ONNXTensorElementDataType CustomOpSentencepieceTokenizer::GetInputType(size_t in
     default:
       ORTX_CXX_API_THROW(MakeString("Unexpected input index ", index), ORT_FAIL);
   }
-  API_IMPL_END("CustomOpSentencepieceTokenizer::GetInputType"")
+  API_IMPL_END("CustomOpSentencepieceTokenizer::GetInputType")
 };
 
 size_t CustomOpSentencepieceTokenizer::GetOutputTypeCount() const {
