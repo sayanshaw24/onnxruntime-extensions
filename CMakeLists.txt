@@ -259,7 +259,14 @@ if(OCOS_ENABLE_SPM_TOKENIZER)
   set(SPM_ENABLE_TCMALLOC OFF CACHE INTERNAL "")
   set(SPM_ENABLE_SHARED OFF CACHE INTERNAL "")
   message(STATUS "Fetch sentencepiece")
+  set(CUR_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  string(REPLACE "-fno-exceptions" "-fexceptions" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  string(REPLACE "-fno-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  string(REPLACE "-fno-asynchronous-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  set(ALLOW_EXCEPT_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   include(sentencepieceproject)
+  set(CMAKE_CXX_FLAGS "${CUR_CMAKE_CXX_FLAGS}")
+
   file(GLOB stpiece_TARGET_SRC "operators/tokenizer/sentencepiece/*.cc" "operators/tokenizer/sentencepiece*")
   list(REMOVE_ITEM stpiece_TARGET_SRC INCLUDE REGEX ".*((spm)|(train)).*")
   list(APPEND TARGET_SRC ${stpiece_TARGET_SRC})
@@ -303,6 +310,8 @@ endif()
 add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 add_library(ocos_operators STATIC ${TARGET_SRC})
+set_source_files_properties(operators/tokenizer/sentencepiece* PROPERTIES CXX_FLAGS ${ALLOW_EXCEPT_CXX_FLAGS})
+
 set_target_properties(ocos_operators PROPERTIES FOLDER "operators")
 
 # filter out any files in ${TARGET_SRC} which don't have prefix of ${PROJECT_SOURCE_DIR} before calling source_group
