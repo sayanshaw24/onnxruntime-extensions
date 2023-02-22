@@ -23,6 +23,12 @@ set(CPACK_PACKAGE_NAME "onnxruntime_extensions")
 read_version_file(CPACK_PACKAGE_VERSION_MAJOR CPACK_PACKAGE_VERSION_MINOR CPACK_PACKAGE_VERSION_PATCH)
 set(VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
 
+# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+  cmake_policy(SET CMP0077 NEW)
+endif()
+
 # Needed for Java
 set(CMAKE_C_STANDARD 99)
 
@@ -71,6 +77,13 @@ function(disable_all_operators)
   set(OCOS_ENABLE_VISION OFF CACHE INTERNAL "" FORCE)
 endfunction()
 
+if (CMAKE_GENERATOR_PLATFORM)
+  # Multi-platform generator
+  set(ocos_target_platform ${CMAKE_GENERATOR_PLATFORM})
+else()
+  set(ocos_target_platform ${CMAKE_SYSTEM_PROCESSOR})
+endif()
+
 if(NOT CC_OPTIMIZE)
   message("!!!THE COMPILER OPTIMIZATION HAS BEEN DISABLED, DEBUG-ONLY!!!")
   string(REGEX REPLACE "([\-\/]O[123])" "" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
@@ -87,18 +100,25 @@ if(NOT CC_OPTIMIZE)
   endif()
 endif()
 
-# TOOD: Need more test before it works
-# set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} /DYNAMICBASE")
-# check_cxx_compiler_flag(-guard:cf HAS_GUARD_CF)
-# if (HAS_GUARD_CF)
-#   set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /guard:cf")
-#   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /guard:cf")
-#   set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /guard:cf")
-#   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /guard:cf")
-#   set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /guard:cf")
-#   set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /guard:cf")
-#   set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} /guard:cf")
-# endif()
+if (MSVC)
+  check_cxx_compiler_flag(-sdl HAS_SDL)
+  check_cxx_compiler_flag(-Qspectre HAS_QSPECTRE)
+  if (HAS_QSPECTRE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Qspectre")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Qspectre")
+  endif()
+  set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} /DYNAMICBASE")
+  check_cxx_compiler_flag(-guard:cf HAS_GUARD_CF)
+  if (HAS_GUARD_CF)
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /guard:cf")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /guard:cf")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /guard:cf")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /guard:cf")
+    set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /guard:cf")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /guard:cf")
+    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} /guard:cf")
+  endif()
+endif()
 
 if(NOT OCOS_BUILD_PYTHON AND OCOS_ENABLE_PYTHON)
   message("OCOS_ENABLE_PYTHON IS DEPRECATED, USE OCOS_BUILD_PYTHON INSTEAD")
@@ -188,6 +208,25 @@ if(NOT OCOS_ENABLE_CPP_EXCEPTIONS)
 endif()
 
 include(FetchContent)
+
+function(set_msvc_c_cpp_compiler_warning_level warning_level)
+  if (NOT "${warning_level}" MATCHES "^[0-4]$")
+    message(FATAL_ERROR "Expected warning_level value of 0-4, got '${warning_level}'.")
+  endif()
+
+  if (MSVC)
+    set(warning_flag "/W${warning_level}")
+    get_property(opts DIRECTORY PROPERTY COMPILE_OPTIONS)
+    # only match the generator expression added by this function
+    list(FILTER opts
+         EXCLUDE REGEX "^\\$<\\$<OR:\\$<COMPILE_LANGUAGE:C>,\\$<COMPILE_LANGUAGE:CXX>>:/W[0-4]>$")
+    list(APPEND opts "$<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:${warning_flag}>")
+    set_property(DIRECTORY PROPERTY COMPILE_OPTIONS "${opts}")
+  endif()
+endfunction()
+
+# set default MSVC warning level to 3 for external dependencies
+set_msvc_c_cpp_compiler_warning_level(3)
 include(ext_ortlib)
 include(gsl)
 
@@ -333,6 +372,10 @@ endif()
 add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 add_library(ocos_operators STATIC ${TARGET_SRC})
+# TODO: need to address the SDL warnings happens on custom operator code.
+# if (HAS_SDL)
+#   target_compile_options(ocos_operators PRIVATE "/sdl")
+# endif()
 set_target_properties(ocos_operators PROPERTIES FOLDER "operators")
 
 # filter out any files in ${TARGET_SRC} which don't have prefix of ${PROJECT_SOURCE_DIR} before calling source_group
@@ -464,6 +507,9 @@ if(NOT OCOS_ENABLE_STATIC_LIB AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
   endif()
 else()
   add_library(ortcustomops STATIC ${shared_TARGET_LIB_SRC})
+  if (HAS_SDL)
+    target_compile_options(ortcustomops PRIVATE "/sdl")
+  endif()
   add_library(onnxruntime_extensions ALIAS ortcustomops)
   standardize_output_folder(ortcustomops)
   set(_BUILD_SHARED_LIBRARY TRUE)
@@ -494,6 +540,10 @@ if(_BUILD_SHARED_LIBRARY)
     "$<TARGET_PROPERTY:ortcustomops,INTERFACE_INCLUDE_DIRECTORIES>")
   target_link_libraries(extensions_shared PRIVATE ortcustomops)
   set_target_properties(extensions_shared PROPERTIES OUTPUT_NAME "ortextensions")
+  if(MSVC AND ocos_target_platform MATCHES "x86|x64")
+    target_link_options(extensions_shared PRIVATE "/CETCOMPAT")
+  endif()
+
 endif()
 
 if(OCOS_BUILD_PYTHON)
