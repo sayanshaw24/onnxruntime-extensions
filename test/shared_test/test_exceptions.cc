@@ -19,37 +19,44 @@ struct ExceptionalKernel1 : BaseKernel {
 
 // throw in Compute which will be called during model execution
 struct ExceptionalKernel2 : BaseKernel {
-  ExceptionalKernel2(const OrtApi& api, const OrtKernelInfo& info) : BaseKernel(api, info) {}
+  ExceptionalKernel2(const OrtApi& api, const OrtKernelInfo& info) : BaseKernel(api, info) {
+  }
 
   void Compute(OrtKernelContext* context) {
     ORTX_CXX_API_THROW("Throw in Compute", ORT_FAIL);
   }
 };
 
-struct ExceptionalCustomOp : OrtW::CustomOpBase<ExceptionalCustomOp, ExceptionalKernel1> {
-  const char* GetName() const { return "ExceptionalCustomOp"; };
+struct ExceptionalCustomOp1 : OrtW::CustomOpBase<ExceptionalCustomOp1, ExceptionalKernel1> {
+  const char* GetName() const { return "ExceptionalCustomOp1"; };
   size_t GetInputTypeCount() const { return 1; };
   ONNXTensorElementDataType GetInputType(size_t /*index*/) const { return ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT; };
   size_t GetOutputTypeCount() const { return 1; };
   ONNXTensorElementDataType GetOutputType(size_t /*index*/) const { return ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT; };
 };
 
-struct ExceptionalCustomOp1 : OrtW::CustomOpBase<ExceptionalCustomOp, ExceptionalKernel1> {};
-struct ExceptionalCustomOp2 : OrtW::CustomOpBase<ExceptionalCustomOp, ExceptionalKernel2> {};
+struct ExceptionalCustomOp2 : OrtW::CustomOpBase<ExceptionalCustomOp2, ExceptionalKernel2> {
+  const char* GetName() const { return "ExceptionalCustomOp2"; };
+  size_t GetInputTypeCount() const { return 1; };
+  ONNXTensorElementDataType GetInputType(size_t /*index*/) const { return ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT; };
+  size_t GetOutputTypeCount() const { return 1; };
+  ONNXTensorElementDataType GetOutputType(size_t /*index*/) const { return ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT; };
+};
 
 extern "C" OrtStatus* ORT_API_CALL RegisterCustomOps(OrtSessionOptions* options, const OrtApiBase* api);
+static ExceptionalCustomOp1 custom_op1;
+static ExceptionalCustomOp2 custom_op2;
 
 // test a call to an entry point wrapped with API_IMPL_BEGIN/API_IMPL_END behaves as expected.
 // the throw in the ctor of ExceptionalCustomOp1 should be triggered during model loading.
 TEST(Exceptions, TestApiTryCatch_ThrowInModelLoad) {
   auto ort_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "Default");
-  ExceptionalCustomOp1 custom_op;
-  AddExternalCustomOp(&custom_op);
+  AddExternalCustomOp(&custom_op1);
 
   Ort::SessionOptions session_options;
   RegisterCustomOps((OrtSessionOptions*)session_options, OrtGetApiBase());
 
-  std::filesystem::path model("data/exceptional_custom_op.onnx");
+  std::filesystem::path model("data/exceptional_custom_op1.onnx");
   auto fail_fn = [&]() {
     Ort::Session session(*ort_env, model.c_str(), session_options);
   };
@@ -71,13 +78,12 @@ TEST(Exceptions, TestApiTryCatch_ThrowInModelLoad) {
 // the throw in the Compute of ExceptionalCustomOp2 should be triggered during model execution.
 TEST(Exceptions, TestApiTryCatch_ThrowInModelExecution) {
   auto ort_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "Default");
-  ExceptionalCustomOp2 custom_op;
-  AddExternalCustomOp(&custom_op);
+  AddExternalCustomOp(&custom_op2);
 
   Ort::SessionOptions session_options;
   RegisterCustomOps((OrtSessionOptions*)session_options, OrtGetApiBase());
 
-  std::filesystem::path model("data/exceptional_custom_op.onnx");
+  std::filesystem::path model("data/exceptional_custom_op2.onnx");
   Ort::Session session(*ort_env, model.c_str(), session_options);
   Ort::AllocatorWithDefaultOptions allocator;
 
@@ -106,6 +112,7 @@ TEST(Exceptions, TestApiTryCatch_ThrowInModelExecution) {
 #elif defined(OCOS_CONTAIN_EXCEPTIONS)
 
 #else
-  EXPECT_THROW(fail_fn(), OrtW::Exception);
+  // ORT catches the exceptions thrown by the custom op and rethrows them as Ort::Exception
+  EXPECT_THROW(fail_fn(), Ort::Exception);
 #endif
 }

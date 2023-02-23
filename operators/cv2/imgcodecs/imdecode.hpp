@@ -49,10 +49,6 @@ struct KernelImageDecoder : BaseKernel {
 };
 
 struct CustomOpImageDecoder : OrtW::CustomOpBase<CustomOpImageDecoder, KernelImageDecoder> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-    return new KernelImageDecoder(api, info);
-  }
-
   const char* GetName() const {
     return "ImageDecoder";
   }
