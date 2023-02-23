@@ -582,14 +582,9 @@ elseif(OCOS_ENABLE_CTEST AND NOT OCOS_ENABLE_SELECTED_OPLIST)
   set(TEST_SRC_DIR ${PROJECT_SOURCE_DIR}/test)
   message(STATUS "Fetch googletest")
   include(googletest)
-
-  #get_target_property(gmock_INCLUDE_DIRS gmock INCLUDE_DIRECTORIES)
-  #message(STATUS "gmock_INCLUDE_DIRS: ${gmock_INCLUDE_DIRS}")
-
   file(GLOB static_TEST_SRC "${TEST_SRC_DIR}/static_test/*.cc")
   add_executable(ocos_test ${static_TEST_SRC})
   standardize_output_folder(ocos_test)
-  #target_include_directories(ocos_test PRIVATE ${gmock_INCLUDE_DIRS})
   target_link_libraries(ocos_test PRIVATE gtest_main ocos_operators ${ocos_libraries})
   add_test(NAME ocos_test COMMAND $<TARGET_FILE:ocos_test>)
 
@@ -609,17 +604,8 @@ elseif(OCOS_ENABLE_CTEST AND NOT OCOS_ENABLE_SELECTED_OPLIST)
     file(GLOB shared_TEST_SRC "${TEST_SRC_DIR}/shared_test/*.cc")
     add_executable(extensions_test ${shared_TEST_SRC})
     standardize_output_folder(extensions_test)
-
-    target_include_directories(extensions_test PRIVATE ${spm_INCLUDE_DIRS} ${gmock_SOURCE_DIR}/include
+    target_include_directories(extensions_test PRIVATE ${spm_INCLUDE_DIRS}
       "$<TARGET_PROPERTY:extensions_shared,INTERFACE_INCLUDE_DIRECTORIES>")
-
-    # TODO: Not sure why this is necessary. gtest includes work without special handling
-    # get_target_property(gmock_INCLUDE_DIRS gmock INCLUDE_DIRECTORIES)
-    # message(STATUS "gmock_INCLUDE_DIRS: ${gmock_INCLUDE_DIRS}")
-    # target_include_directories(extensions_test INTERFACE ${gmock_INCLUDE_DIRS})
-
-    # get_target_property(extensions_test_INCLUDE_DIRS extensions_test INCLUDE_DIRECTORIES)
-    # message(FATAL_ERROR "extensions_test_INCLUDE_DIRS: ${extensions_test_INCLUDE_DIRS}")
 
     if(ONNXRUNTIME_LIB_DIR)
       target_link_directories(extensions_test PRIVATE ${ONNXRUNTIME_LIB_DIR})
