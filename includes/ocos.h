@@ -18,8 +18,7 @@ constexpr const char* c_OpDomain = "ai.onnx.contrib";
 constexpr const char* c_ComMsExtOpDomain = "com.microsoft.extensions";
 
 struct BaseKernel {
-  // BaseKernel(const OrtApi& api) noexcept : api_(api), info_(nullptr), ort_(api_) {}
-  BaseKernel(const OrtApi& api, const OrtKernelInfo* info = nullptr) noexcept : api_(api), info_(info), ort_(api_) {
+  BaseKernel(const OrtApi& api, const OrtKernelInfo& info) noexcept : api_(api), info_(info), ort_(api_) {
   }
 
   bool HasAttribute(const char* name) const noexcept;
@@ -41,7 +40,7 @@ struct BaseKernel {
   OrtErrorCode GetErrorCodeAndRelease(OrtStatusPtr status) const noexcept;
   const OrtApi& api_;
   OrtW::CustomOpApi ort_;
-  const OrtKernelInfo* info_;
+  const OrtKernelInfo& info_;
 };
 
 struct OrtTensorDimensions : std::vector<int64_t> {

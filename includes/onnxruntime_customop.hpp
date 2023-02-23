@@ -33,7 +33,8 @@ struct CustomOpApi {
   size_t GetTensorShapeElementCount(_In_ const OrtTensorTypeAndShapeInfo* info) const;
   ONNXTensorElementDataType GetTensorElementType(const OrtTensorTypeAndShapeInfo* info) const;
   size_t GetDimensionsCount(_In_ const OrtTensorTypeAndShapeInfo* info) const;
-  void GetDimensions(_In_ const OrtTensorTypeAndShapeInfo* info, _Out_ int64_t* dim_values, size_t dim_values_length) const;
+  void GetDimensions(_In_ const OrtTensorTypeAndShapeInfo* info, _Out_ int64_t* dim_values,
+                     size_t dim_values_length) const;
   void SetDimensions(OrtTensorTypeAndShapeInfo* info, _In_ const int64_t* dim_values, size_t dim_count) const;
 
   template <typename T>
@@ -46,7 +47,8 @@ struct CustomOpApi {
   size_t KernelContext_GetInputCount(const OrtKernelContext* context) const;
   const OrtValue* KernelContext_GetInput(const OrtKernelContext* context, _In_ size_t index) const;
   size_t KernelContext_GetOutputCount(const OrtKernelContext* context) const;
-  OrtValue* KernelContext_GetOutput(OrtKernelContext* context, _In_ size_t index, _In_ const int64_t* dim_values, size_t dim_count) const;
+  OrtValue* KernelContext_GetOutput(OrtKernelContext* context, _In_ size_t index, _In_ const int64_t* dim_values,
+                                    size_t dim_count) const;
 
   void ThrowOnError(OrtStatus* status) const {
     OrtW::ThrowOnError(api_, status);
@@ -63,8 +65,8 @@ struct CustomOpBase : OrtCustomOp {
     OrtCustomOp::CreateKernel = [](const OrtCustomOp* this_, const OrtApi* api, const OrtKernelInfo* info) {
       void* result = nullptr;
       API_IMPL_BEGIN
-      result = static_cast<const TOp*>(this_)->CreateKernel(*api, info);
-      API_IMPL_END("OrtCustomOp::CreateKernel")
+      result = static_cast<const TOp*>(this_)->CreateKernel(*api, *info);
+      API_IMPL_END()
       return result;
     };
 
@@ -80,7 +82,7 @@ struct CustomOpBase : OrtCustomOp {
       return static_cast<const TOp*>(this_)->GetInputTypeCount();
     };
 
-    OrtCustomOp::GetInputType = [](const OrtCustomOp* this_, size_t index) {
+    OrtCustomOp::GetInputType = [](const OrtCustomOp* this_, size_t index) noexcept {
       return static_cast<const TOp*>(this_)->GetInputType(index);
     };
 
@@ -88,14 +90,14 @@ struct CustomOpBase : OrtCustomOp {
       return static_cast<const TOp*>(this_)->GetOutputTypeCount();
     };
 
-    OrtCustomOp::GetOutputType = [](const OrtCustomOp* this_, size_t index) {
+    OrtCustomOp::GetOutputType = [](const OrtCustomOp* this_, size_t index) noexcept {
       return static_cast<const TOp*>(this_)->GetOutputType(index);
     };
 
     OrtCustomOp::KernelCompute = [](void* op_kernel, OrtKernelContext* context) {
       API_IMPL_BEGIN
       static_cast<TKernel*>(op_kernel)->Compute(context);
-      API_IMPL_END("OrtCustomOp::KernelCompute")
+      API_IMPL_END()
     };
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -127,11 +129,8 @@ struct CustomOpBase : OrtCustomOp {
 #endif
   }
 
-  // TODO: Make all the kernels consistent and take `api` and `info` as args so we don't need a CreateKernel variant
-  // that drops the `info`. If they all populate info_ we don't need checks the BaseKernel methods that
-  // info_ != nullptr.
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo* info) const {
-    return CreateKernelImpl(api);
+  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
+    return CreateKernelImpl(api, info);
   }
 
   // Default implementation of GetExecutionProviderType that returns nullptr to default to the CPU provider

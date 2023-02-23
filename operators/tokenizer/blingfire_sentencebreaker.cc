@@ -9,8 +9,9 @@
 #include <algorithm>
 #include <memory>
 
-KernelBlingFireSentenceBreaker::KernelBlingFireSentenceBreaker(const OrtApi& api, const OrtKernelInfo* info) : BaseKernel(api, info), max_sentence(-1) {
-  model_data_ = ort_.KernelInfoGetAttribute<std::string>(info, "model");
+KernelBlingFireSentenceBreaker::KernelBlingFireSentenceBreaker(const OrtApi& api, const OrtKernelInfo& info)
+    : BaseKernel(api, info), max_sentence(-1) {
+  model_data_ = ort_.KernelInfoGetAttribute<std::string>(&info, "model");
   if (model_data_.empty()) {
     ORTX_CXX_API_THROW("vocabulary shouldn't be empty.", ORT_INVALID_ARGUMENT);
   }
@@ -24,7 +25,7 @@ KernelBlingFireSentenceBreaker::KernelBlingFireSentenceBreaker(const OrtApi& api
   model_ = std::shared_ptr<void>(model_ptr, FreeModel);
 
   if (HasAttribute("max_sentence")) {
-    max_sentence = static_cast<int>(ort_.KernelInfoGetAttribute<int64_t>(info, "max_sentence"));
+    max_sentence = static_cast<int>(ort_.KernelInfoGetAttribute<int64_t>(&info, "max_sentence"));
   }
 }
 
@@ -78,7 +79,7 @@ void KernelBlingFireSentenceBreaker::Compute(OrtKernelContext* context) {
   OrtW::ThrowOnError(api_, api_.FillStringTensor(output, output_sentences.data(), output_sentences.size()));
 }
 
-void* CustomOpBlingFireSentenceBreaker::CreateKernel(const OrtApi& api, const OrtKernelInfo* info) const {
+void* CustomOpBlingFireSentenceBreaker::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
   return CreateKernelImpl(api, info);
 };
 

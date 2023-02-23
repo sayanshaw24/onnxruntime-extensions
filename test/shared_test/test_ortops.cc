@@ -20,7 +20,7 @@ const char* GetLibraryPath() {
 }
 
 struct KernelOne : BaseKernel {
-  KernelOne(const OrtApi& api) : BaseKernel(api) {
+  KernelOne(const OrtApi& api, const OrtKernelInfo& info) : BaseKernel(api, info) {
   }
 
   void Compute(OrtKernelContext* context) {
@@ -66,7 +66,7 @@ struct CustomOpOne : OrtW::CustomOpBase<CustomOpOne, KernelOne> {
 };
 
 struct KernelTwo : BaseKernel {
-  KernelTwo(const OrtApi& api) : BaseKernel(api) {
+  KernelTwo(const OrtApi& api, const OrtKernelInfo& info) : BaseKernel(api, info) {
   }
   void Compute(OrtKernelContext* context) {
     // Setup inputs
@@ -109,7 +109,7 @@ struct CustomOpTwo : OrtW::CustomOpBase<CustomOpTwo, KernelTwo> {
 };
 
 struct KernelThree : BaseKernel {
-  KernelThree(const OrtApi& api, const OrtKernelInfo* info) : BaseKernel(api, info) {
+  KernelThree(const OrtApi& api, const OrtKernelInfo& info) : BaseKernel(api, info) {
     if (!TryToGetAttribute("substr", substr_)) {
       substr_ = "";
     }
@@ -136,7 +136,7 @@ struct KernelThree : BaseKernel {
 };
 
 struct CustomOpThree : OrtW::CustomOpBase<CustomOpThree, KernelThree> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo* info) const {
+  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
     return CreateKernelImpl(api, info);
   };
   const char* GetName() const {

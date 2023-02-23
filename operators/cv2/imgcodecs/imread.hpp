@@ -4,7 +4,7 @@
 #include "string_tensor.h"
 
 struct KernelImageReader : BaseKernel {
-  KernelImageReader(const OrtApi& api) : BaseKernel(api) {
+  KernelImageReader(const OrtApi& api, const OrtKernelInfo& info) : BaseKernel(api, info) {
   }
 
   void Compute(OrtKernelContext* context) {

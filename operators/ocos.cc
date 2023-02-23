@@ -7,7 +7,7 @@ bool BaseKernel::HasAttribute(const char* name) const noexcept {
   size_t size;
   std::string out;
   // Crashes here.
-  OrtStatus* status = api_.KernelInfoGetAttribute_string(info_, name, nullptr, &size);
+  OrtStatus* status = api_.KernelInfoGetAttribute_string(&info_, name, nullptr, &size);
   auto r = api_.GetErrorCode(status);
   bool has = (r == ORT_INVALID_ARGUMENT) || (r == ORT_OK);
   if (has) {
@@ -44,7 +44,7 @@ void BaseKernel::SetOutput(OrtKernelContext* ctx, size_t output_idx, const std::
 template <>
 bool BaseKernel::TryToGetAttribute(const char* name, std::string& value) const noexcept {
   size_t size = 0;
-  OrtStatus* status = api_.KernelInfoGetAttribute_string(info_, name, nullptr, &size);
+  OrtStatus* status = api_.KernelInfoGetAttribute_string(&info_, name, nullptr, &size);
 
   // The status should be a nullptr when querying for the size.
   if (status != nullptr) {
@@ -53,7 +53,7 @@ bool BaseKernel::TryToGetAttribute(const char* name, std::string& value) const n
   }
 
   value.resize(size);
-  status = api_.KernelInfoGetAttribute_string(info_, name, &value[0], &size);
+  status = api_.KernelInfoGetAttribute_string(&info_, name, &value[0], &size);
   if (GetErrorCodeAndRelease(status) != ORT_OK) {
     return false;
   }
@@ -64,18 +64,18 @@ bool BaseKernel::TryToGetAttribute(const char* name, std::string& value) const n
 
 template <>
 bool BaseKernel::TryToGetAttribute(const char* name, int64_t& value) const noexcept {
-  return GetErrorCodeAndRelease(api_.KernelInfoGetAttribute_int64(info_, name, &value)) == ORT_OK;
+  return GetErrorCodeAndRelease(api_.KernelInfoGetAttribute_int64(&info_, name, &value)) == ORT_OK;
 }
 
 template <>
 bool BaseKernel::TryToGetAttribute(const char* name, float& value) const noexcept {
-  return GetErrorCodeAndRelease(api_.KernelInfoGetAttribute_float(info_, name, &value)) == ORT_OK;
+  return GetErrorCodeAndRelease(api_.KernelInfoGetAttribute_float(&info_, name, &value)) == ORT_OK;
 }
 
 template <>
 bool BaseKernel::TryToGetAttribute(const char* name, bool& value) const noexcept {
   int64_t origin_value = 0;
-  if (GetErrorCodeAndRelease(api_.KernelInfoGetAttribute_int64(info_, name, &origin_value)) != ORT_OK) {
+  if (GetErrorCodeAndRelease(api_.KernelInfoGetAttribute_int64(&info_, name, &origin_value)) != ORT_OK) {
     return false;
   }
 

@@ -82,7 +82,7 @@ std::vector<ustring> BasicTokenizer::Tokenize(ustring text) {
   return result;
 }
 
-KernelBasicTokenizer::KernelBasicTokenizer(const OrtApi& api, const OrtKernelInfo* info) : BaseKernel(api, info) {
+KernelBasicTokenizer::KernelBasicTokenizer(const OrtApi& api, const OrtKernelInfo& info) : BaseKernel(api, info) {
   bool do_lower_case = TryToGetAttributeWithDefault("do_lower_case", true);
   bool tokenize_chinese_chars = TryToGetAttributeWithDefault("tokenize_chinese_chars", true);
   bool strip_accents = TryToGetAttributeWithDefault("strip_accents", false);
@@ -109,7 +109,7 @@ void KernelBasicTokenizer::Compute(OrtKernelContext* context) {
   FillTensorDataString(api_, ort_, context, result, output);
 }
 
-void* CustomOpBasicTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo* info) const {
+void* CustomOpBasicTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
   return CreateKernelImpl(api, info);
 };
 

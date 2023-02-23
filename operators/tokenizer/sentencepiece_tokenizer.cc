@@ -7,8 +7,9 @@
 #include "string_tensor.h"
 #include "base64.h"
 
-KernelSentencepieceTokenizer::KernelSentencepieceTokenizer(const OrtApi& api, const OrtKernelInfo* info) : BaseKernel(api, info) {
-  std::string model_as_string = ort_.KernelInfoGetAttribute<std::string>(info, "model");
+KernelSentencepieceTokenizer::KernelSentencepieceTokenizer(const OrtApi& api, const OrtKernelInfo& info)
+    : BaseKernel(api, info) {
+  std::string model_as_string = ort_.KernelInfoGetAttribute<std::string>(&info, "model");
   sentencepiece::ModelProto model_proto;
   std::vector<uint8_t> model_as_bytes;
   if (base64_decode(model_as_string, model_as_bytes)) {
@@ -102,7 +103,7 @@ void KernelSentencepieceTokenizer::Compute(OrtKernelContext* context) {
   memcpy(ptr_indices, indices.data(), indices.size() * sizeof(int64_t));
 }
 
-void* CustomOpSentencepieceTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo* info) const {
+void* CustomOpSentencepieceTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
   return CreateKernelImpl(api, info);
 };
 

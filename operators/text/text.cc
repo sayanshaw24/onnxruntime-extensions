@@ -17,14 +17,15 @@
 #if defined(ENABLE_RE2_REGEX)
 #include "text/re2_strings/string_regex_replace.hpp"
 #include "text/re2_strings/string_regex_split.hpp"
-#endif  // ENABLE_RE2_REGEX
+#endif // ENABLE_RE2_REGEX
 
-FxLoadCustomOpFactory LoadCustomOpClasses_Text =
-    LoadCustomOpClasses<CustomOpClassBegin,
+
+FxLoadCustomOpFactory LoadCustomOpClasses_Text = 
+    LoadCustomOpClasses<CustomOpClassBegin, 
 #if defined(ENABLE_RE2_REGEX)
                         CustomOpStringRegexReplace,
                         CustomOpStringRegexSplitWithOffsets,
-#endif  // ENABLE_RE2_REGEX
+#endif // ENABLE_RE2_REGEX
                         CustomOpRaggedTensorToDense,
                         CustomOpRaggedTensorToSparse,
                         CustomOpStringRaggedTensorToDense,
@@ -42,4 +43,5 @@ FxLoadCustomOpFactory LoadCustomOpClasses_Text =
                         CustomOpStringLength,
                         CustomOpStringConcat,
                         CustomOpStringECMARegexReplace,
-                        CustomOpStringECMARegexSplitWithOffsets>;
+                        CustomOpStringECMARegexSplitWithOffsets
+                        >;

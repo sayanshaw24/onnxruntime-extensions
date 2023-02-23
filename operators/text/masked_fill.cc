@@ -8,8 +8,7 @@
 #include <codecvt>
 #include <algorithm>
 
-
-KernelMaskedFill::KernelMaskedFill(const OrtApi& api, const OrtKernelInfo* /*info*/) : BaseKernel(api) {
+KernelMaskedFill::KernelMaskedFill(const OrtApi& api, const OrtKernelInfo& info) : BaseKernel(api, info) {
 }
 
 void KernelMaskedFill::Compute(OrtKernelContext* context) {
@@ -29,7 +28,7 @@ void KernelMaskedFill::Compute(OrtKernelContext* context) {
   }
 
   std::vector<std::string> value;
-  const bool * mask = nullptr;
+  const bool* mask = nullptr;
 
   GetTensorMutableDataString(api_, ort_, context, input_value, value);
   mask = ort_.GetTensorData<bool>(input_mask);
@@ -51,7 +50,7 @@ void KernelMaskedFill::Compute(OrtKernelContext* context) {
   FillTensorDataString(api_, ort_, context, result, output);
 }
 
-void* CustomOpMaskedFill::CreateKernel(const OrtApi& api, const OrtKernelInfo*  info) const {
+void* CustomOpMaskedFill::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
   return CreateKernelImpl(api, info);
 };
 
@@ -69,7 +68,8 @@ ONNXTensorElementDataType CustomOpMaskedFill::GetInputType(size_t index) const {
       return ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL;
     default:
       ORTX_CXX_API_THROW(MakeString("Unexpected input index ", index), ORT_INVALID_ARGUMENT);
-  }};
+  }
+};
 
 size_t CustomOpMaskedFill::GetOutputTypeCount() const {
   return 1;
