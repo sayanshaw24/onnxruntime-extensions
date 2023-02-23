@@ -16,9 +16,9 @@ struct KernelDecodeImage : BaseKernel {
 };
 
 struct CustomOpDecodeImage : OrtW::CustomOpBase<CustomOpDecodeImage, KernelDecodeImage> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-    return new KernelDecodeImage(api, info);
-  }
+  // void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
+  //   return new KernelDecodeImage(api, info);
+  // }
 
   void KernelDestroy(void* op_kernel) {
     delete static_cast<KernelDecodeImage*>(op_kernel);

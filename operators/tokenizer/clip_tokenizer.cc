@@ -202,10 +202,6 @@ void KernelClipBpeTokenizer::Compute(OrtKernelContext* context) {
   }
 }
 
-void* CustomOpClipBpeTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-}
-
 const char* CustomOpClipBpeTokenizer::GetName() const {
   return "CLIPTokenizer";
 }

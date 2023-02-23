@@ -53,10 +53,6 @@ struct KernelSentencepieceDecoder : BaseKernel {
 };
 
 struct CustomOpSentencepieceDecoder : OrtW::CustomOpBase<CustomOpSentencepieceDecoder, KernelSentencepieceDecoder> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-    return CreateKernelImpl(api, info);
-  }
-
   const char* GetName() const {
     return "SentencepieceDecoder";
   }

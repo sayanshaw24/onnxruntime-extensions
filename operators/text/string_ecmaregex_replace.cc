@@ -69,10 +69,6 @@ void KernelStringECMARegexReplace::Compute(OrtKernelContext* context) {
   FillTensorDataString(api_, ort_, context, str_input, output);
 }
 
-void* CustomOpStringECMARegexReplace::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpStringECMARegexReplace::GetName() const { return "StringECMARegexReplace"; };
 
 size_t CustomOpStringECMARegexReplace::GetInputTypeCount() const {

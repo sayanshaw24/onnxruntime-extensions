@@ -79,10 +79,6 @@ void KernelBlingFireSentenceBreaker::Compute(OrtKernelContext* context) {
   OrtW::ThrowOnError(api_, api_.FillStringTensor(output, output_sentences.data(), output_sentences.size()));
 }
 
-void* CustomOpBlingFireSentenceBreaker::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpBlingFireSentenceBreaker::GetName() const { return "BlingFireSentenceBreaker"; };
 
 size_t CustomOpBlingFireSentenceBreaker::GetInputTypeCount() const {

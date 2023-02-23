@@ -40,10 +40,6 @@ void KernelStringMapping::Compute(OrtKernelContext* context) {
   FillTensorDataString(api_, ort_, context, input_data, output);
 }
 
-void* CustomOpStringMapping::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpStringMapping::GetName() const { return "StringMapping"; };
 
 size_t CustomOpStringMapping::GetInputTypeCount() const {

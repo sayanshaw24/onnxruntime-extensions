@@ -123,10 +123,6 @@ void KernelVectorToString::Compute(OrtKernelContext* context) {
   FillTensorDataString(api_, ort_, context, mapping_result, output);
 }
 
-void* CustomOpVectorToString::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpVectorToString::GetName() const { return "VectorToString"; };
 
 size_t CustomOpVectorToString::GetInputTypeCount() const {

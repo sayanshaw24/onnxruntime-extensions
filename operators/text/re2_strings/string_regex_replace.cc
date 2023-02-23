@@ -65,10 +65,6 @@ void KernelStringRegexReplace::Compute(OrtKernelContext* context) {
   FillTensorDataString(api_, ort_, context, str_input, output);
 }
 
-void* CustomOpStringRegexReplace::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpStringRegexReplace::GetName() const { return "StringRegexReplace"; };
 
 size_t CustomOpStringRegexReplace::GetInputTypeCount() const {

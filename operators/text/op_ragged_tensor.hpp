@@ -41,7 +41,6 @@ struct CustomOpRaggedTensorToDense : OrtW::CustomOpBase<CustomOpRaggedTensorToDe
   size_t GetOutputTypeCount() const;
   ONNXTensorElementDataType GetOutputType(size_t index) const;
   const char* GetName() const;
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const;
   ONNXTensorElementDataType GetInputType(size_t index) const;
 };
 
@@ -56,6 +55,5 @@ struct CustomOpStringRaggedTensorToDense : OrtW::CustomOpBase<CustomOpStringRagg
   size_t GetOutputTypeCount() const;
   ONNXTensorElementDataType GetOutputType(size_t index) const;
   const char* GetName() const;
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const;
   ONNXTensorElementDataType GetInputType(size_t index) const;
 };

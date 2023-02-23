@@ -131,10 +131,6 @@ ONNXTensorElementDataType CustomOpRaggedTensorToDense::GetOutputType(size_t /*in
   return ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
 };
 
-void* CustomOpRaggedTensorToDense::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpRaggedTensorToDense::GetName() const {
   return "RaggedTensorToDense";
 };
@@ -189,10 +185,6 @@ size_t CustomOpStringRaggedTensorToDense::GetOutputTypeCount() const {
 
 ONNXTensorElementDataType CustomOpStringRaggedTensorToDense::GetOutputType(size_t /*index*/) const {
   return ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING;
-};
-
-void* CustomOpStringRaggedTensorToDense::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
 };
 
 const char* CustomOpStringRaggedTensorToDense::GetName() const {

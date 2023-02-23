@@ -166,10 +166,6 @@ void KernelWordpieceTokenizer::Compute(OrtKernelContext* context) {
   ptr_row_lengths[i] = row_begins[static_cast<size_t>(i)];
 }
 
-void* CustomOpWordpieceTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpWordpieceTokenizer::GetName() const {
   return "WordpieceTokenizer";
 };

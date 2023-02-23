@@ -22,7 +22,6 @@ struct KernelWordpieceTokenizer : BaseKernel {
 };
 
 struct CustomOpWordpieceTokenizer : OrtW::CustomOpBase<CustomOpWordpieceTokenizer, KernelWordpieceTokenizer> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const;
   const char* GetName() const;
   size_t GetInputTypeCount() const;
   ONNXTensorElementDataType GetInputType(size_t index) const;

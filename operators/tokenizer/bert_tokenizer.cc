@@ -328,10 +328,6 @@ void KernelBertTokenizer::Compute(OrtKernelContext* context) {
   SetOutput(context, 2, output_dim, attention_mask);
 }
 
-void* CustomOpBertTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-}
-
 const char* CustomOpBertTokenizer::GetName() const { return "BertTokenizer"; }
 
 size_t CustomOpBertTokenizer::GetInputTypeCount() const {
@@ -383,10 +379,6 @@ void KernelHfBertTokenizer::Compute(OrtKernelContext* context) {
   SetOutput(context, 0, outer_dims, input_ids);
   SetOutput(context, 1, outer_dims, attention_mask);
   SetOutput(context, 2, outer_dims, token_type_ids);
-}
-
-void* CustomOpHfBertTokenizer::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
 }
 
 const char* CustomOpHfBertTokenizer::GetName() const { return "HfBertTokenizer"; }

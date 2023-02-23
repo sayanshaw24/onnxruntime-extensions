@@ -177,10 +177,6 @@ void KernelBertTokenizerDecoder::Compute(OrtKernelContext* context) {
   FillTensorDataString(api_, ort_, context, result, output);
 }
 
-void* CustomOpBertTokenizerDecoder::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpBertTokenizerDecoder::GetName() const { return "BertTokenizerDecoder"; };
 
 size_t CustomOpBertTokenizerDecoder::GetInputTypeCount() const {

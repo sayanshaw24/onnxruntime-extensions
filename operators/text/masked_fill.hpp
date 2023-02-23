@@ -16,7 +16,6 @@ struct KernelMaskedFill : BaseKernel {
 };
 
 struct CustomOpMaskedFill : OrtW::CustomOpBase<CustomOpMaskedFill, KernelMaskedFill> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const;
   const char* GetName() const;
   size_t GetInputTypeCount() const;
   ONNXTensorElementDataType GetInputType(size_t index) const;

@@ -89,10 +89,6 @@ void KernelStringECMARegexSplitWithOffsets::Compute(OrtKernelContext* context) {
   memcpy(p_output, row_offsets.data(), row_offsets.size() * sizeof(int64_t));
 }
 
-void* CustomOpStringECMARegexSplitWithOffsets::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpStringECMARegexSplitWithOffsets::GetName() const { return "StringECMARegexSplitWithOffsets"; };
 
 size_t CustomOpStringECMARegexSplitWithOffsets::GetInputTypeCount() const {

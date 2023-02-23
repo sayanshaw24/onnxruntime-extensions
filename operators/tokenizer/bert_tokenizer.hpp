@@ -42,8 +42,8 @@ class TruncateStrategy final {
 class WordpieceTokenizer final {
  public:
   WordpieceTokenizer(
-    std::shared_ptr<BertTokenizerVocab> vocab, ustring unk_token,
-    ustring suffix_indicator, int max_input_chars_per_word = 100);
+      std::shared_ptr<BertTokenizerVocab> vocab, ustring unk_token,
+      ustring suffix_indicator, int max_input_chars_per_word = 100);
   std::vector<ustring> Tokenize(const ustring& text);
   std::vector<ustring> Tokenize(const std::vector<ustring>& tokens);
   std::vector<int64_t> Encode(const std::vector<ustring>& tokens);
@@ -98,7 +98,6 @@ struct KernelBertTokenizer : BaseKernel {
 };
 
 struct CustomOpBertTokenizer : OrtW::CustomOpBase<CustomOpBertTokenizer, KernelBertTokenizer> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const;
   const char* GetName() const;
   size_t GetInputTypeCount() const;
   ONNXTensorElementDataType GetInputType(size_t index) const;
@@ -112,7 +111,6 @@ struct KernelHfBertTokenizer : KernelBertTokenizer {
 };
 
 struct CustomOpHfBertTokenizer : OrtW::CustomOpBase<CustomOpHfBertTokenizer, KernelHfBertTokenizer> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const;
   const char* GetName() const;
   size_t GetInputTypeCount() const;
   ONNXTensorElementDataType GetInputType(size_t index) const;

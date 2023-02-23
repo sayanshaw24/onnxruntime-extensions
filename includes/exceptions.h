@@ -78,7 +78,7 @@ inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
   OCOS_TRY {
 // if we have to contain exceptions, log and abort().
 #if defined(OCOS_CONTAIN_EXCEPTIONS)
-#define API_IMPL_END()                                  \
+#define API_IMPL_END                                    \
   }                                                     \
   OCOS_CATCH(const std::exception& ex) {                \
     OCOS_HANDLE_EXCEPTION([&]() {                       \
@@ -88,7 +88,7 @@ inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
   }
 #else
 // rethrow.
-#define API_IMPL_END()                \
+#define API_IMPL_END                  \
   }                                   \
   OCOS_CATCH(const std::exception&) { \
     OCOS_HANDLE_EXCEPTION([&]() {     \

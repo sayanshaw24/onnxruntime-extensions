@@ -66,7 +66,7 @@ struct CustomOpBase : OrtCustomOp {
       void* result = nullptr;
       API_IMPL_BEGIN
       result = static_cast<const TOp*>(this_)->CreateKernel(*api, *info);
-      API_IMPL_END()
+      API_IMPL_END
       return result;
     };
 
@@ -97,7 +97,7 @@ struct CustomOpBase : OrtCustomOp {
     OrtCustomOp::KernelCompute = [](void* op_kernel, OrtKernelContext* context) {
       API_IMPL_BEGIN
       static_cast<TKernel*>(op_kernel)->Compute(context);
-      API_IMPL_END()
+      API_IMPL_END
     };
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -117,20 +117,18 @@ struct CustomOpBase : OrtCustomOp {
     };
   }
 
-  template <typename... Args>
-  TKernel* CreateKernelImpl(Args&&... args) const {
+  // default implementation. we can't use a virtual function as the layout of this struct has to be aligned with
+  // OrtCustomOp, but a derived class can override by creating a function with the same name and signature,
+  // calling this base class implementation as needed. e.g. see CustomOpThree in the unit test code
+  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
 #if defined(_MSC_VER) && !defined(__clang__)
 #pragma warning(push)
 #pragma warning(disable : 26409)
 #endif
-    return new TKernel(std::forward<Args>(args)...);
+    return new TKernel(api, info);
 #if defined(_MSC_VER) && !defined(__clang__)
 #pragma warning(pop)
 #endif
-  }
-
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-    return CreateKernelImpl(api, info);
   }
 
   // Default implementation of GetExecutionProviderType that returns nullptr to default to the CPU provider

@@ -2,7 +2,6 @@
 #include "ocos.h"
 #include "ustring.h"
 
-
 class VocabData;
 
 struct KernelBpeTokenizer : BaseKernel {
@@ -18,7 +17,6 @@ struct KernelBpeTokenizer : BaseKernel {
 };
 
 struct CustomOpBpeTokenizer : OrtW::CustomOpBase<CustomOpBpeTokenizer, KernelBpeTokenizer> {
-  void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const;
   const char* GetName() const;
   size_t GetInputTypeCount() const;
   ONNXTensorElementDataType GetInputType(size_t index) const;

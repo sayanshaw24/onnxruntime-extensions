@@ -137,7 +137,8 @@ struct KernelThree : BaseKernel {
 
 struct CustomOpThree : OrtW::CustomOpBase<CustomOpThree, KernelThree> {
   void* CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-    return CreateKernelImpl(api, info);
+    std::cout << "Called CreateKernel override" << std::endl;
+    return OrtW::CustomOpBase<CustomOpThree, KernelThree>::CreateKernel(api, info);
   };
   const char* GetName() const {
     return "CustomOpThree";

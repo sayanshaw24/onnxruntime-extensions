@@ -50,10 +50,6 @@ void KernelMaskedFill::Compute(OrtKernelContext* context) {
   FillTensorDataString(api_, ort_, context, result, output);
 }
 
-void* CustomOpMaskedFill::CreateKernel(const OrtApi& api, const OrtKernelInfo& info) const {
-  return CreateKernelImpl(api, info);
-};
-
 const char* CustomOpMaskedFill::GetName() const { return "MaskedFill"; };
 
 size_t CustomOpMaskedFill::GetInputTypeCount() const {
