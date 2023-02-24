@@ -164,48 +164,25 @@ if(OCOS_ENABLE_SELECTED_OPLIST)
   include(_selectedoplist)
 endif()
 
-macro(SetExceptionsRequired)
-    set(_OCOS_EXCEPTIONS_REQUIRED OFF)
-    if (OCOS_ENABLE_GPT2_TOKENIZER OR
-        OCOS_ENABLE_WORDPIECE_TOKENIZER OR
-        OCOS_ENABLE_BLINGFIRE OR
-        OCOS_ENABLE_SPM_TOKENIZER OR
-        (OCOS_ENABLE_CV2 OR OCOS_ENABLE_OPENCV_CODECS OR OCOS_ENABLE_VISION))
-        set(_OCOS_EXCEPTIONS_REQUIRED ON)
-    endif()
-endmacro()
-
-macro(ValidateExceptionSettings)
-    if (NOT OCOS_ENABLE_CPP_EXCEPTIONS)
-        # If the operator needs the cpp exceptions supports, write down their names
-        if (OCOS_ENABLE_GPT2_TOKENIZER)
-            # gpt2 tokenizer depends on nlohmann_json in onnxruntime, which is old and cannot disable exceptions.
-            # could remove this limit when the nlohmann_json is updated in onnxruntime.
-            message(FATAL_ERROR "GPT2_TOKENIZER operator needs C++ exceptions support")
-        endif()
-        if (OCOS_ENABLE_WORDPIECE_TOKENIZER)
-            # wordpiece tokenizer depends on nlohmann_json in onnxruntime, which is old and cannot disable exceptions.
-            # could remove this limit when the nlohmann_json is updated in onnxruntime.
-            message(FATAL_ERROR "WORDPIECE_TOKENIZER operator needs C++ exceptions support")
-        endif()
-        if (OCOS_ENABLE_BLINGFIRE)
-            message(FATAL_ERROR "BLINGFIRE operator needs C++ exceptions support")
-        endif()
-        if (OCOS_ENABLE_SPM_TOKENIZER)
-            message(FATAL_ERROR "SPM_TOKENIZER operator needs C++ exceptions support")
-        endif()
-        if (OCOS_ENABLE_CV2 OR OCOS_ENABLE_OPENCV_CODECS OR OCOS_ENABLE_VISION)
-            message(FATAL_ERROR "The operators depending on OpenCV need C++ exceptions support")
-        endif()
-    endif()
-endmacro()
-
 set(_OCOS_EXCEPTIONS_REQUIRED OFF)
-include(noexcep_ops)
-SetExceptionsRequired()
+if (OCOS_ENABLE_GPT2_TOKENIZER OR
+    OCOS_ENABLE_WORDPIECE_TOKENIZER OR
+    OCOS_ENABLE_BLINGFIRE OR
+    OCOS_ENABLE_SPM_TOKENIZER OR
+    (OCOS_ENABLE_CV2 OR OCOS_ENABLE_OPENCV_CODECS OR OCOS_ENABLE_VISION))
+    set(_OCOS_EXCEPTIONS_REQUIRED ON)
+endif()
 
 # Special case an embedded build with ORT exceptions disabled but custom ops that require exceptions.
-if(_ONNXRUNTIME_EMBEDDED AND onnxruntime_DISABLE_EXCEPTIONS AND _OCOS_EXCEPTIONS_REQUIRED)
+# Allow using an override so we can do a direct build of ort-ext in a CI without having to embed it in an ORT build.
+set(_OCOS_PREVENT_EXCEPTION_PROPAGATION OFF)
+if (_OCOS_PREVENT_EXCEPTION_PROPAGATION_OVERRIDE)
+  set(_OCOS_PREVENT_EXCEPTION_PROPAGATION ${_OCOS_PREVENT_EXCEPTION_PROPAGATION_DEFAULT})
+elseif(_ONNXRUNTIME_EMBEDDED AND onnxruntime_DISABLE_EXCEPTIONS AND _OCOS_EXCEPTIONS_REQUIRED)
+  set(_OCOS_PREVENT_EXCEPTION_PROPAGATION ON)
+endif()
+
+if (_OCOS_PREVENT_EXCEPTION_PROPAGATION)
   message(STATUS "Embedded build as part of ONNX Runtime with exceptions disabled. "
                  "Extensions will be built with exceptions enabled due to included custom ops "
                  "using 3rd party libraries that require exceptions.")
@@ -226,17 +203,38 @@ if(_ONNXRUNTIME_EMBEDDED AND onnxruntime_DISABLE_EXCEPTIONS AND _OCOS_EXCEPTIONS
   endif()
 
   # the ort-ext code has to provide a barrier between the exception enabled custom op code and ORT.
+  message(STATUS "Adding exception propagation compile definition")
   add_compile_definitions(OCOS_PREVENT_EXCEPTION_PROPAGATION)
 endif()
 
 if(NOT OCOS_ENABLE_CPP_EXCEPTIONS)
   # make sure we're not building with a 3rd party library that requires exceptions
-  ValidateExceptionSettings()
+  if (NOT OCOS_ENABLE_CPP_EXCEPTIONS)
+      if (OCOS_ENABLE_GPT2_TOKENIZER)
+          # gpt2 tokenizer depends on nlohmann_json in onnxruntime, which is old and cannot disable exceptions.
+          # could remove this limit when the nlohmann_json is updated in onnxruntime.
+          message(FATAL_ERROR "GPT2_TOKENIZER operator needs C++ exceptions support")
+      endif()
+      if (OCOS_ENABLE_WORDPIECE_TOKENIZER)
+          # wordpiece tokenizer depends on nlohmann_json in onnxruntime, which is old and cannot disable exceptions.
+          # could remove this limit when the nlohmann_json is updated in onnxruntime.
+          message(FATAL_ERROR "WORDPIECE_TOKENIZER operator needs C++ exceptions support")
+      endif()
+      if (OCOS_ENABLE_BLINGFIRE)
+          message(FATAL_ERROR "BLINGFIRE operator needs C++ exceptions support")
+      endif()
+      if (OCOS_ENABLE_SPM_TOKENIZER)
+          message(FATAL_ERROR "SPM_TOKENIZER operator needs C++ exceptions support")
+      endif()
+      if (OCOS_ENABLE_CV2 OR OCOS_ENABLE_OPENCV_CODECS OR OCOS_ENABLE_VISION)
+          message(FATAL_ERROR "The operators depending on OpenCV need C++ exceptions support")
+      endif()
+  endif()
 
   add_compile_definitions(OCOS_NO_EXCEPTIONS ORT_NO_EXCEPTIONS)
 
   if(MSVC)
-    string(REGEX REPLACE "/EHsc" "/EHs-c-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "/EHsc" "/EHs-c-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     add_compile_definitions("_HAS_EXCEPTIONS=0")
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables")
@@ -627,7 +625,7 @@ endforeach()
 if(OCOS_ENABLE_CTEST)
   if (OCOS_ENABLE_SELECTED_OPLIST)
     # currently the tests don't handle operator exclusion cleanly.
-    message(FATAL "Due to usage of OCOS_ENABLE_SELECTED_OPLIST excluding operators the tests are unable to be built and run")
+    message(FATAL_ERROR "Due to usage of OCOS_ENABLE_SELECTED_OPLIST excluding operators the tests are unable to be built and run")
   endif()
 
   # Enable CTest
