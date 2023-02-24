@@ -63,11 +63,9 @@ struct CustomOpBase : OrtCustomOp {
   CustomOpBase() {
     OrtCustomOp::version = 10;  // The minimum ORT version supported
     OrtCustomOp::CreateKernel = [](const OrtCustomOp* this_, const OrtApi* api, const OrtKernelInfo* info) {
-      void* result = nullptr;
       OCOS_API_IMPL_BEGIN
-      result = static_cast<const TOp*>(this_)->CreateKernel(*api, *info);
+      return static_cast<const TOp*>(this_)->CreateKernel(*api, *info);
       OCOS_API_IMPL_END
-      return result;
     };
 
     OrtCustomOp::GetName = [](const OrtCustomOp* this_) noexcept {
