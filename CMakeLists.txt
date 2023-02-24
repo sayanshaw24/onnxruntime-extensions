@@ -177,7 +177,7 @@ endif()
 # Allow using an override so we can do a direct build of ort-ext in a CI without having to embed it in an ORT build.
 set(_OCOS_PREVENT_EXCEPTION_PROPAGATION OFF)
 if (_OCOS_PREVENT_EXCEPTION_PROPAGATION_OVERRIDE)
-  set(_OCOS_PREVENT_EXCEPTION_PROPAGATION ${_OCOS_PREVENT_EXCEPTION_PROPAGATION_DEFAULT})
+  set(_OCOS_PREVENT_EXCEPTION_PROPAGATION ${_OCOS_PREVENT_EXCEPTION_PROPAGATION_OVERRIDE})
 elseif(_ONNXRUNTIME_EMBEDDED AND onnxruntime_DISABLE_EXCEPTIONS AND _OCOS_EXCEPTIONS_REQUIRED)
   set(_OCOS_PREVENT_EXCEPTION_PROPAGATION ON)
 endif()
@@ -203,7 +203,6 @@ if (_OCOS_PREVENT_EXCEPTION_PROPAGATION)
   endif()
 
   # the ort-ext code has to provide a barrier between the exception enabled custom op code and ORT.
-  message(STATUS "Adding exception propagation compile definition")
   add_compile_definitions(OCOS_PREVENT_EXCEPTION_PROPAGATION)
 endif()
 
