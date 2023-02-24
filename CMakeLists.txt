@@ -182,7 +182,7 @@ if(_ONNXRUNTIME_EMBEDDED AND onnxruntime_DISABLE_EXCEPTIONS AND _OCOS_EXCEPTIONS
   # undo the flags that ORT has set to disable exceptions.
   # see https://github.com/microsoft/onnxruntime/blob/b1abb8c656c597bf221bd85682ae3d9e350d9aba/cmake/adjust_global_compile_flags.cmake#L160-L169
   if(MSVC)
-    string(REGEX REPLACE "/EHs-c-" "/EHsc" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "/EHs-c-" "/EHsc" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   else()
     string(REPLACE "-fno-exceptions" "-fexceptions" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     string(REPLACE "-fno-unwind-tables" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
@@ -190,7 +190,7 @@ if(_ONNXRUNTIME_EMBEDDED AND onnxruntime_DISABLE_EXCEPTIONS AND _OCOS_EXCEPTIONS
   endif()
 
   # the ort-ext code has to provide a barrier between the exception enabled custom op code and ORT.
-  add_compile_definitions(OCOS_CONTAIN_EXCEPTIONS)
+  add_compile_definitions(OCOS_PREVENT_EXCEPTION_PROPAGATION)
 endif()
 
 if(NOT OCOS_ENABLE_CPP_EXCEPTIONS)

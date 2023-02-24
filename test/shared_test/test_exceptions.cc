@@ -47,7 +47,7 @@ extern "C" OrtStatus* ORT_API_CALL RegisterCustomOps(OrtSessionOptions* options,
 static ExceptionalCustomOp1 custom_op1;
 static ExceptionalCustomOp2 custom_op2;
 
-// test a call to an entry point wrapped with API_IMPL_BEGIN/API_IMPL_END behaves as expected.
+// test a call to an entry point wrapped with OCOS_API_IMPL_BEGIN/OCOS_API_IMPL_END behaves as expected.
 // the throw in the ctor of ExceptionalCustomOp1 should be triggered during model loading.
 TEST(Exceptions, TestApiTryCatch_ThrowInModelLoad) {
   auto ort_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "Default");
@@ -61,7 +61,7 @@ TEST(Exceptions, TestApiTryCatch_ThrowInModelLoad) {
     Ort::Session session(*ort_env, model.c_str(), session_options);
   };
 
-#if defined(OCOS_CONTAIN_EXCEPTIONS)
+#if defined(OCOS_PREVENT_EXCEPTION_PROPAGATION)
   // the exception should be caught and logged, and the process should abort so the exception is not propagated up.
   // log output needs to be manually checked
   // can test on Linux but not Windows.
@@ -74,7 +74,7 @@ TEST(Exceptions, TestApiTryCatch_ThrowInModelLoad) {
 #endif
 }
 
-// test a call to an entry point wrapped with API_IMPL_BEGIN/API_IMPL_END behaves as expected.
+// test a call to an entry point wrapped with OCOS_API_IMPL_BEGIN/OCOS_API_IMPL_END behaves as expected.
 // the throw in the Compute of ExceptionalCustomOp2 should be triggered during model execution.
 TEST(Exceptions, TestApiTryCatch_ThrowInModelExecution) {
   auto ort_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "Default");
@@ -109,7 +109,7 @@ TEST(Exceptions, TestApiTryCatch_ThrowInModelExecution) {
 #if !defined(_WIN32)
   EXPECT_EXIT(fail_fn(), ::testing::KilledBySignal(SIGABRT), ".*");
 #endif
-#elif defined(OCOS_CONTAIN_EXCEPTIONS)
+#elif defined(OCOS_PREVENT_EXCEPTION_PROPAGATION)
 
 #else
   // ORT catches the exceptions thrown by the custom op and rethrows them as Ort::Exception
