@@ -20,6 +20,7 @@ void KernelMaskedFill::Compute(OrtKernelContext* context) {
   OrtTensorDimensions mask_dimensions(ort_, input_mask);
 
   if (!(value_dimensions.IsScalar() || value_dimensions.IsVector())) {
+    std::cerr << "Generate warning!";
     ORTX_CXX_API_THROW("[MaskedFill]: the dimension of input value should be vector or scalar.", ORT_INVALID_ARGUMENT);
   }
 
