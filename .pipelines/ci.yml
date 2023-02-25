@@ -454,7 +454,7 @@ jobs:
   #####################################
   # Linux prevent exception propagation
   #####################################
-  - job: Linux Prevent Exception Propagation
+  - job: Linux_Prevent_Exception_Propagation
     pool:
       vmImage: 'ubuntu-latest'
 
