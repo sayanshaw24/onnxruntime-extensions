@@ -463,7 +463,7 @@ jobs:
       # using _OCOS_PREVENT_EXCEPTION_PROPAGATION_OVERRIDE. The build should re-enable exceptions within ort-ext
       # but prevent them from propagating. Unit tests are run to validate this.
       - script: '
-          ./build_lib.sh --enable_cxx_tests --onnxruntime_version 1.14.0 --config RelWithDebInfo
+          ./build_lib.sh --enable_cxx_tests --onnxruntime_version 1.14.0 --config RelWithDebInfo --update
           --cmake_extra_defines
             _OCOS_PREVENT_EXCEPTION_PROPAGATION_OVERRIDE=ON OCOS_ENABLE_CPP_EXCEPTIONS=OFF
             CMAKE_CXX_FLAGS="-fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables"
@@ -475,9 +475,12 @@ jobs:
       - script: |
           grep "^_OCOS_PREVENT_EXCEPTION_PROPAGATION_OVERRIDE.*ON$" build/Linux/RelWithDebInfo/CMakeCache.txt
           if [ $? -ne 0 ]; then
+            echo "Override value not set correctly"
             exit 1
           fi
+          grep "^OCOS_ENABLE_CPP_EXCEPTIONS" build/Linux/RelWithDebInfo/CMakeCache.txt
           grep "^OCOS_ENABLE_CPP_EXCEPTIONS.*ON$" build/Linux/RelWithDebInfo/CMakeCache.txt
           if [ $? -ne 0 ]; then
+            echo "Exceptions were not re-enabled"
             exit 1
           fi
