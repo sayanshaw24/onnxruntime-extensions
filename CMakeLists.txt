@@ -188,7 +188,7 @@ if (_OCOS_PREVENT_EXCEPTION_PROPAGATION)
                  "using 3rd party libraries that require exceptions.")
 
   if (NOT OCOS_ENABLE_CPP_EXCEPTIONS)
-    message(WARNING "Enabling C++ exception support as custom ops included in the build requires them to be enabled.")
+    message(WARNING "Enabling C++ exception support as custom ops included in the build require them to be enabled.")
     set(OCOS_ENABLE_CPP_EXCEPTIONS ON)
   endif()
 
