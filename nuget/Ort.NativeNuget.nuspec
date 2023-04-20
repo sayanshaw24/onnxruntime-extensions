@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<package>
+<metadata>
+<id>Microsoft.ML.OnnxRuntime</id>
+<version>1.15.0-dev-20230420-0916-e82cf6eb64</version>
+<authors>Microsoft</authors>
+<owners>Microsoft</owners>
+<description>This package contains native shared library artifacts for all supported platforms of ONNX Runtime.</description>
+<copyright>© Microsoft Corporation. All rights reserved.</copyright>
+<tags>ONNX ONNX Runtime Machine Learning</tags>
+<icon>ORT_icon_for_light_bg.png</icon>
+<license type="file">LICENSE.txt</license>
+<projectUrl>https://github.com/Microsoft/onnxruntime</projectUrl>
+<repository type="git" url="https://github.com/Microsoft/onnxruntime.git" commit="e82cf6eb640f402545b600e3f338d7fa0a6a96de" />
+
+<dependencies>
+<group targetFramework="NETCOREAPP">
+<dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.15.0-dev-20230420-0916-e82cf6eb64"/>
+</group>
+<group targetFramework="NETSTANDARD">
+<dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.15.0-dev-20230420-0916-e82cf6eb64"/>
+</group>
+<group targetFramework="NETFRAMEWORK">
+<dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.15.0-dev-20230420-0916-e82cf6eb64"/>
+</group>
+<group targetFramework="monoandroid11.0">
+<dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.15.0-dev-20230420-0916-e82cf6eb64"/>
+</group>
+<group targetFramework="xamarinios10">
+<dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.15.0-dev-20230420-0916-e82cf6eb64"/>
+</group>
+<group targetFramework="net6.0-android31.0">
+<dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.15.0-dev-20230420-0916-e82cf6eb64"/>
+</group>
+<group targetFramework="net6.0-ios15.4">
+<dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.15.0-dev-20230420-0916-e82cf6eb64"/>
+</group>
+<group targetFramework="net6.0-macos12.3">
+<dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.15.0-dev-20230420-0916-e82cf6eb64"/>
+</group>
+</dependencies>
+<releaseNotes>
+Release Def:
+	Branch: refs/heads/skottmckay/DebugNuspec
+	Commit: e82cf6eb640f402545b600e3f338d7fa0a6a96de
+	Build: https://aiinfra.visualstudio.com/Lotus/_build/results?buildId=300636
+</releaseNotes>
+</metadata>
+<files>
+<file src="D:\a\_work\1\s\include\onnxruntime\core\session\onnxruntime_*.h" target="build\native\include" />
+<file src="D:\a\_work\1\s\include\onnxruntime\core\framework\provider_options.h" target="build\native\include" />
+<file src="D:\a\_work\1\s\include\onnxruntime\core\providers\cpu\cpu_provider_factory.h" target="build\native\include" />
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-android\onnxruntime.aar" target="runtimes/android/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-ios-xcframework\**" target="runtimes/ios/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-linux-aarch64\lib\libonnxruntime.so" target="runtimes/linux-arm64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-linux-x64\lib\libonnxruntime.so" target="runtimes/linux-x64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-osx-arm64\lib\libonnxruntime.dylib" target="runtimes/osx.10.14-arm64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-osx-x86_64\lib\libonnxruntime.dylib" target="runtimes/osx.10.14-x64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-arm\lib\onnxruntime.dll" target="runtimes/win-arm/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-arm\lib\onnxruntime.lib" target="runtimes/win-arm/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-arm\lib\onnxruntime_providers_shared.dll" target="runtimes/win-arm/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-arm\lib\onnxruntime_providers_shared.lib" target="runtimes/win-arm/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-arm64\lib\onnxruntime.dll" target="runtimes/win-arm64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-arm64\lib\onnxruntime.lib" target="runtimes/win-arm64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-arm64\lib\onnxruntime_providers_shared.dll" target="runtimes/win-arm64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-arm64\lib\onnxruntime_providers_shared.lib" target="runtimes/win-arm64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-x64\lib\onnxruntime.dll" target="runtimes/win-x64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-x64\lib\onnxruntime.lib" target="runtimes/win-x64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-x64\lib\onnxruntime_providers_shared.dll" target="runtimes/win-x64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-x64\lib\onnxruntime_providers_shared.lib" target="runtimes/win-x64/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-x86\lib\onnxruntime.dll" target="runtimes/win-x86/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-x86\lib\onnxruntime.lib" target="runtimes/win-x86/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-x86\lib\onnxruntime_providers_shared.dll" target="runtimes/win-x86/native"/>
+<file src="D:\a\_work\1\b\RelWithDebInfo\RelWithDebInfo\nuget-artifacts\onnxruntime-win-x86\lib\onnxruntime_providers_shared.lib" target="runtimes/win-x86/native"/>
+
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\netstandard\Microsoft.ML.OnnxRuntime.props" target="build\native" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\netstandard\Microsoft.ML.OnnxRuntime.props" target="build\netstandard1.1" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\netstandard\Microsoft.ML.OnnxRuntime.props" target="build\netstandard2.0" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\netstandard\Microsoft.ML.OnnxRuntime.targets" target="build\native" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\netstandard\Microsoft.ML.OnnxRuntime.targets" target="build\netstandard1.1" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\netstandard\Microsoft.ML.OnnxRuntime.targets" target="build\netstandard2.0" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\monoandroid11.0\Microsoft.ML.OnnxRuntime.targets" target="build\monoandroid11.0" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\monoandroid11.0\Microsoft.ML.OnnxRuntime.targets" target="buildTransitive\monoandroid11.0" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\xamarinios10\Microsoft.ML.OnnxRuntime.targets" target="build\xamarinios10" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\xamarinios10\Microsoft.ML.OnnxRuntime.targets" target="buildTransitive\xamarinios10" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\net6.0-android\Microsoft.ML.OnnxRuntime.targets" target="build\net6.0-android31.0" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\net6.0-android\Microsoft.ML.OnnxRuntime.targets" target="buildTransitive\net6.0-android31.0" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\net6.0-ios\Microsoft.ML.OnnxRuntime.targets" target="build\net6.0-ios15.4" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\net6.0-ios\Microsoft.ML.OnnxRuntime.targets" target="buildTransitive\net6.0-ios15.4" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\net6.0-macos\Microsoft.ML.OnnxRuntime.targets" target="build\net6.0-macos12.3" />
+<file src="D:\a\_work\1\s\csharp\src\Microsoft.ML.OnnxRuntime\targets\net6.0-macos\Microsoft.ML.OnnxRuntime.targets" target="buildTransitive\net6.0-macos12.3" />
+<file src="D:\a\_work\1\s\LICENSE.txt" target="LICENSE.txt" />
+<file src="D:\a\_work\1\s\ThirdPartyNotices.txt" target="ThirdPartyNotices.txt" />
+<file src="D:\a\_work\1\s\docs\Privacy.md" target="Privacy.md" />
+<file src="D:\a\_work\1\s\ORT_icon_for_light_bg.png" target="ORT_icon_for_light_bg.png" />
+</files>
+</package>

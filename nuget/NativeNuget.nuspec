@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!-- ORT Extensions nuspec -->
+<package>
+<metadata>
+<id>Microsoft.ML.OnnxRuntime.Extensions</id>
+<version>1.15.0-dev-20230413-1131-98a303e639</version>
+<authors>Microsoft</authors>
+<owners>Microsoft</owners>
+<description>The best of the best of the best. Of the best. Extensions.</description>
+<copyright>© Microsoft Corporation. All rights reserved.</copyright>
+<tags>ONNX ONNXRuntime AI Machine Learning</tags>
+<icon>ORT_icon_for_light_bg.png</icon>
+<license type="file">LICENSE.txt</license>
+<projectUrl>https://github.com/Microsoft/onnxruntime-extensions</projectUrl>
+<repository type="git" url="https://github.com/Microsoft/onnxruntime-extensions.git" commit="98a303e639abff092f77295d39a31b5411d4f110" />
+<!-- TODO: Decide if we want to make the dependency on Microsoft.ML.OnnxRuntime explicit.
+           Need to manage versions if we do.
+<dependencies>
+<group targetFramework="NETCOREAPP">
+<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
+</group>
+<group targetFramework="NETSTANDARD">
+<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
+</group>
+<group targetFramework="NETFRAMEWORK">
+<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
+</group>
+<group targetFramework="monoandroid11.0">
+<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
+</group>
+<group targetFramework="xamarinios10">
+<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
+</group>
+<group targetFramework="net6.0-android31.0">
+<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
+</group>
+<group targetFramework="net6.0-ios15.4">
+<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
+</group>
+<group targetFramework="net6.0-macos12.3">
+<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
+</group>
+</dependencies>
+-->
+<releaseNotes>
+Release Def:
+	Branch:
+	Commit:
+	Build: https://aiinfra.visualstudio.com/Lotus/_build/results?buildId=
+</releaseNotes>
+</metadata>
+<!-- assemble files in the /nuget directory and run nuget pack from -->
+<files>
+<file src="..\LICENSE.txt" target="LICENSE.txt" />
+<file src="..\includes\*.h" target="build\native\include" />
+<file src="..\includes\*.hpp" target="build\native\include" />
+<!-- Windows, Linux, macOS via netstandard -->
+<file src="..\build\Windows\Debug\bin\Debug\ortextensions.dll" target="runtimes\win-x64\native" />
+<file src="..\build\Windows\Debug\lib\Debug\ortextensions.lib" target="runtimes\win-x64\native" />
+<file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\native" />
+<file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\netstandard1.1" />
+<file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\netstandard2.0" />
+<file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\native" />
+<file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\netstandard1.1" />
+<file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\netstandard2.0" />
+
+<!-- Android via Xamarin/MAUI -->
+<file src="..\build\Android\onnxruntime-extensions.aar" target="runtimes\android\native" />
+<file src="targets\monoandroid11.0\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\monoandroid11.0" />
+<file src="targets\monoandroid11.0\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\monoandroid11.0" />
+<file src="targets\net6.0-android\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\net6.0-android31.0" />
+<file src="targets\net6.0-android\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\net6.0-android31.0" />
+
+<!-- iOS via Xamarin/MAUI -->
+<file src="..\build\iOS\**" target="runtimes\ios\native" /> <!-- contents of src directory is onnxruntime_extensions.xcframework folder -->
+<file src="targets\xamarinios10\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\xamarinios10" />
+<file src="targets\xamarinios10\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\xamarinios10" />
+<file src="targets\net6.0-ios\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\net6.0-ios15.4" />
+<file src="targets\net6.0-ios\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\net6.0-ios15.4" />
+
+<!--
+Not sure we need .net6 macos. To use MAUI it requires a mac-catalyst build not a macos one.
+<file src="targets\net6.0-macos\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\net6.0-macos12.3" />
+<file src="targets\net6.0-macos\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\net6.0-macos12.3" />
+-->
+<file src="..\ThirdPartyNotices.txt" target="ThirdPartyNotices.txt" />
+<file src="..\ORT_icon_for_light_bg.png" target="ORT_icon_for_light_bg.png" />
+</files>
+</package>
