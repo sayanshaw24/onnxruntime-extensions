@@ -3,10 +3,24 @@
 <package>
 <metadata>
 <id>Microsoft.ML.OnnxRuntime.Extensions</id>
-<version>1.15.0-dev-20230413-1131-98a303e639</version>
+<version>0.8.0</version>
 <authors>Microsoft</authors>
 <owners>Microsoft</owners>
-<description>The best of the best of the best. Of the best. Extensions.</description>
+<description>ONNX Runtime Extensions NuGet Package</description>
+<!-- TODO: Update release notes prior to 0.8.0 release with new features here -->
+<releaseNotes>
+	General
+	1. New custom operators: RobertaTokenizer, ClipTokenizer, EncodeImage, DecodeImage
+	2. ORT custom operator C++ stub generation tool
+	3. Operator implementation and documentation improved.
+	4. Python (3.7 - 3.10) and ORT (1.10 above) compatible.
+
+	Mobile
+	1. Android package: Maven
+	2. iOS package: CocoaPods
+	3. PrePostProcessor tool for mobile model
+	4. Super-resolution model pre- / post- processing end-to-end examples
+</releaseNotes>
 <copyright>© Microsoft Corporation. All rights reserved.</copyright>
 <tags>ONNX ONNXRuntime AI Machine Learning</tags>
 <icon>ORT_icon_for_light_bg.png</icon>
