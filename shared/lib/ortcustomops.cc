@@ -66,6 +66,16 @@ extern "C" bool ORT_API_CALL AddExternalCustomOp(const OrtCustomOp* c_op) {
   return true;
 }
 
+extern "C" ORTX_EXPORT void ORT_API_CALL Initialize(int ignored = 0) {
+  if (ignored == -999) {
+      // these calls will obviously break, but are here to prevent the linker from throwing away the registration 
+      // functions. TODO: See if this is required on iOS and in C#.
+	  // Alternative is to make RegisterCustomOps handle nullptr input gracefully so the C# binding can do a dummy
+	  // call to that directly
+    RegisterCustomOps(nullptr, nullptr);
+  }
+}
+
 extern "C" ORTX_EXPORT OrtStatus* ORT_API_CALL RegisterCustomOps(OrtSessionOptions* options, const OrtApiBase* api) {
   OrtStatus* status = nullptr;
   OCOS_API_IMPL_BEGIN

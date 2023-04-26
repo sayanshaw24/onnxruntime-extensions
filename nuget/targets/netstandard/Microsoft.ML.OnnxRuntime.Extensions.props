@@ -7,6 +7,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
 
+<!--
   <ItemDefinitionGroup Condition="'$(PlatformTarget)' == 'ARM64'">
     <Link>
       <AdditionalDependencies>$(MSBuildThisFileDirectory)../../runtimes/win-arm64/native/ortextensions.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -15,21 +16,22 @@
 
   <ItemDefinitionGroup Condition="'$(PlatformTarget)' == 'ARM'">
     <Link>
-      <AdditionalDependencies>$(MSBuildThisFileDirectory)../../runtimes/win-arm/native/onnxruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(MSBuildThisFileDirectory)../../runtimes/win-arm/native/ortextensions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
   <ItemDefinitionGroup Condition="'$(PlatformTarget)' == 'x64' OR ('$(PlatformTarget)' == 'AnyCPU' AND '$(Prefer32Bit)' != 'true')">
    <Link>
-      <AdditionalDependencies>$(MSBuildThisFileDirectory)../../runtimes/win-x64/native/onnxruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(MSBuildThisFileDirectory)../../runtimes/win-x64/native/ortextensions.lib;%(AdditionalDependencies)</AdditionalDependencies>
    </Link>
   </ItemDefinitionGroup>
 
   <ItemDefinitionGroup Condition="'$(PlatformTarget)' == 'x86' OR ('$(PlatformTarget)' == 'AnyCPU' AND '$(Prefer32Bit)' == 'true')">
    <Link>
-      <AdditionalDependencies>$(MSBuildThisFileDirectory)../../runtimes/win-x86/native/onnxruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(MSBuildThisFileDirectory)../../runtimes/win-x86/native/ortextensions.lib;%(AdditionalDependencies)</AdditionalDependencies>
    </Link>
   </ItemDefinitionGroup>
+-->
 
   <PropertyGroup>
     <EnginePlatform Condition="'$(Platform)' == 'Win32'">x86</EnginePlatform>

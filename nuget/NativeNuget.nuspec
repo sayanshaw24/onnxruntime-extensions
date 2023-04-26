@@ -3,7 +3,7 @@
 <package>
 <metadata>
 <id>Microsoft.ML.OnnxRuntime.Extensions</id>
-<version>1.15.0-dev-20230413-1131-98a303e639</version>
+<version>1.15.0-dev-4</version>
 <authors>Microsoft</authors>
 <owners>Microsoft</owners>
 <description>The best of the best of the best. Of the best. Extensions.</description>
@@ -12,7 +12,7 @@
 <icon>ORT_icon_for_light_bg.png</icon>
 <license type="file">LICENSE.txt</license>
 <projectUrl>https://github.com/Microsoft/onnxruntime-extensions</projectUrl>
-<repository type="git" url="https://github.com/Microsoft/onnxruntime-extensions.git" commit="98a303e639abff092f77295d39a31b5411d4f110" />
+<repository type="git" url="https://github.com/Microsoft/onnxruntime-extensions.git" commit="123456" />
 <!-- TODO: Decide if we want to make the dependency on Microsoft.ML.OnnxRuntime explicit.
            Need to manage versions if we do.
 <dependencies>
@@ -56,7 +56,7 @@ Release Def:
 <file src="..\includes\*.hpp" target="build\native\include" />
 <!-- Windows, Linux, macOS via netstandard -->
 <file src="..\build\Windows\Debug\bin\Debug\ortextensions.dll" target="runtimes\win-x64\native" />
-<file src="..\build\Windows\Debug\lib\Debug\ortextensions.lib" target="runtimes\win-x64\native" />
+<!-- <file src="..\build\Windows\Debug\lib\Debug\ortextensions.lib" target="runtimes\win-x64\native" /> -->
 <file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\native" />
 <file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\netstandard1.1" />
 <file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\netstandard2.0" />
@@ -65,7 +65,7 @@ Release Def:
 <file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\netstandard2.0" />
 
 <!-- Android via Xamarin/MAUI -->
-<file src="..\build\Android\onnxruntime-extensions.aar" target="runtimes\android\native" />
+<file src="..\build\Android\onnxruntime-extensions-debug.aar" target="runtimes\android\native" />
 <file src="targets\monoandroid11.0\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\monoandroid11.0" />
 <file src="targets\monoandroid11.0\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\monoandroid11.0" />
 <file src="targets\net6.0-android\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\net6.0-android31.0" />
