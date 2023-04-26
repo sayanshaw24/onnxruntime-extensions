@@ -51,7 +51,7 @@ Release Def:
 </metadata>
 <!-- assemble files in the /nuget directory and run nuget pack from -->
 <files>
-<file src="..\LICENSE.txt" target="LICENSE.txt" />
+<file src="LICENSE.txt" target="LICENSE.txt" />
 <file src="..\includes\*.h" target="build\native\include" />
 <file src="..\includes\*.hpp" target="build\native\include" />
 <!-- Windows, Linux, macOS via netstandard -->
@@ -84,6 +84,6 @@ Not sure we need .net6 macos. To use MAUI it requires a mac-catalyst build not a
 <file src="targets\net6.0-macos\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\net6.0-macos12.3" />
 -->
 <file src="..\ThirdPartyNotices.txt" target="ThirdPartyNotices.txt" />
-<file src="..\ORT_icon_for_light_bg.png" target="ORT_icon_for_light_bg.png" />
+<file src="ORT_icon_for_light_bg.png" target="ORT_icon_for_light_bg.png" />
 </files>
 </package>
