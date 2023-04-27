@@ -12,36 +12,7 @@
 <icon>ORT_icon_for_light_bg.png</icon>
 <license type="file">LICENSE.txt</license>
 <projectUrl>https://github.com/Microsoft/onnxruntime-extensions</projectUrl>
-<repository type="git" url="https://github.com/Microsoft/onnxruntime-extensions.git" commit="123456" />
-<!-- TODO: Decide if we want to make the dependency on Microsoft.ML.OnnxRuntime explicit.
-           Need to manage versions if we do.
-<dependencies>
-<group targetFramework="NETCOREAPP">
-<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
-</group>
-<group targetFramework="NETSTANDARD">
-<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
-</group>
-<group targetFramework="NETFRAMEWORK">
-<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
-</group>
-<group targetFramework="monoandroid11.0">
-<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
-</group>
-<group targetFramework="xamarinios10">
-<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
-</group>
-<group targetFramework="net6.0-android31.0">
-<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
-</group>
-<group targetFramework="net6.0-ios15.4">
-<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
-</group>
-<group targetFramework="net6.0-macos12.3">
-<dependency id="Microsoft.ML.OnnxRuntime" version="1.14.1"/>
-</group>
-</dependencies>
--->
+<repository type="git" url="https://github.com/Microsoft/onnxruntime-extensions.git" commit="COMMIT_ID" />
 <releaseNotes>
 Release Def:
 	Branch:
@@ -52,11 +23,18 @@ Release Def:
 <!-- assemble files in the /nuget directory and run nuget pack from -->
 <files>
 <file src="LICENSE.txt" target="LICENSE.txt" />
+<file src="ORT_icon_for_light_bg.png" target="ORT_icon_for_light_bg.png" />
+<file src="..\ThirdPartyNotices.txt" target="ThirdPartyNotices.txt" />
 <file src="..\includes\*.h" target="build\native\include" />
 <file src="..\includes\*.hpp" target="build\native\include" />
+
+<!--
+	NOTE: If you wish to create a local nuget package for testing, update the relevant src paths below to point to the
+	local build you wish to test, and comment out the entries for any platforms you don't need in the nuget package.
+	Run `nuget pack NativeNuget.nuspec` from this directory to produce the package.
+-->
 <!-- Windows, Linux, macOS via netstandard -->
 <file src="..\build\Windows\Debug\bin\Debug\ortextensions.dll" target="runtimes\win-x64\native" />
-<!-- <file src="..\build\Windows\Debug\lib\Debug\ortextensions.lib" target="runtimes\win-x64\native" /> -->
 <file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\native" />
 <file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\netstandard1.1" />
 <file src="targets\netstandard\Microsoft.ML.OnnxRuntime.Extensions.props" target="build\netstandard2.0" />
@@ -78,12 +56,8 @@ Release Def:
 <file src="targets\net6.0-ios\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\net6.0-ios15.4" />
 <file src="targets\net6.0-ios\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\net6.0-ios15.4" />
 
-<!--
-Not sure we need .net6 macos. To use MAUI it requires a mac-catalyst build not a macos one.
+<!-- .net 6 macOS -->
 <file src="targets\net6.0-macos\Microsoft.ML.OnnxRuntime.Extensions.targets" target="build\net6.0-macos12.3" />
 <file src="targets\net6.0-macos\Microsoft.ML.OnnxRuntime.Extensions.targets" target="buildTransitive\net6.0-macos12.3" />
--->
-<file src="..\ThirdPartyNotices.txt" target="ThirdPartyNotices.txt" />
-<file src="ORT_icon_for_light_bg.png" target="ORT_icon_for_light_bg.png" />
 </files>
 </package>
