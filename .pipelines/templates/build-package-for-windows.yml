@@ -47,7 +47,7 @@ jobs:
       displayName: 'build onnxruntime-extensions'
       inputs:
         filename: '.\build_lib.bat'
-        args: "--${{parameters.BuildPlatform}} --build_dir $(Build.BinariesDirectory)/out/ --config RelWithDebInfo ${{parameters.AdditionalBuildFlags}}"
+        arguments: "--${{parameters.BuildPlatform}} --build_dir $(Build.BinariesDirectory)/out/ --config RelWithDebInfo ${{parameters.AdditionalBuildFlags}}"
         modifyEnvironment: true
         workingFolder: $(Build.SourcesDirectory)
 
