@@ -43,7 +43,7 @@ jobs:
 
   - script: |
       set -e -x
-      ./build_lib.sh --build_dir $(Build.BinariesDirectory)/out/ --config RelWithDebInfo ${{parameters.AdditionalBuildFlags}}
+      ./build_lib.sh --build_dir $(Build.BinariesDirectory)/out/ --config RelWithDebInfo --enable_cxx_tests ${{parameters.AdditionalBuildFlags}}
     displayName: 'Build ${{ parameters.MacosArch }}'
 
   - task: Bash@3
