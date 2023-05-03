@@ -22,7 +22,7 @@ parameters:
 - name: OperatorSelectionFlags
   displayName: Flags to select operators included. Default is to disable OCOS_ENABLE_CV2 and OCOS_ENABLE_BLINGFIRE
   type: string
-  default: --cmake-extra-defines OCOS_ENABLE_CV2=OFF OCOS_ENABLE_BLINGFIRE=OFF
+  default: --cmake_extra_defines OCOS_ENABLE_CV2=OFF OCOS_ENABLE_BLINGFIRE=OFF
 
 - name: AdditionalBuildFlags
   displayName: Additional build flags.
