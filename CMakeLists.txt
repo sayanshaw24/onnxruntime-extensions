@@ -150,17 +150,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-if (CMAKE_FIND_FRAMEWORK)
-  message(STATUS "CMAKE_FIND_FRAMEWORK is ${CMAKE_FIND_FRAMEWORK} prior to us calling set. CMAKE_VERSION=${CMAKE_VERSION}")
-endif()
-
-# set both normal and cache variables to NEVER. the regular variable has a default of FIRST defined by cmake.
-# but due to CMP0126 that will exist in parallel to the cached variable.
+# set both regular and cache variables to NEVER. the regular variable has a default of FIRST defined by cmake,
+# but due to CMP0126 that will exist in parallel to the cached variable if the CMake minimum version is >= 3.25.
+# if we don't set this to NEVER (or possibly LAST) the builds of the wheel for different python versions will fail
+# as it will find the system python version first and not the correct python version for the wheel.
 set(CMAKE_FIND_FRAMEWORK "NEVER")
 set(CMAKE_FIND_FRAMEWORK "NEVER" CACHE STRING "...")
 
 if(NOT "${CMAKE_FIND_FRAMEWORK}" STREQUAL "NEVER")
-  message(STATUS "CMAKE_FIND_FRAMEWORK is ${CMAKE_FIND_FRAMEWORK} not NEVER. CMAKE_VERSION=${CMAKE_VERSION}")
+  message(STATUS "CMAKE_FIND_FRAMEWORK is ${CMAKE_FIND_FRAMEWORK} not NEVER.")
 endif()
 
 # External dependencies
