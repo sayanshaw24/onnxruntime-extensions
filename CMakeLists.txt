@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 project(onnxruntime_extensions LANGUAGES C CXX)
 
 # set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -30,6 +30,7 @@ set(VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPAC
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
   cmake_policy(SET CMP0077 NEW)
+  cmake_policy(SET CMP0126 OLD)
 endif()
 
 # Needed for Java
