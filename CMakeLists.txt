@@ -150,16 +150,18 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# if (CMAKE_FIND_FRAMEWORK)
-#   message(STATUS "CMAKE_FIND_FRAMEWORK is ${CMAKE_FIND_FRAMEWORK} prior to us calling set. CMAKE_VERSION=${CMAKE_VERSION}")
-# endif()
+if (CMAKE_FIND_FRAMEWORK)
+  message(STATUS "CMAKE_FIND_FRAMEWORK is ${CMAKE_FIND_FRAMEWORK} prior to us calling set. CMAKE_VERSION=${CMAKE_VERSION}")
+endif()
 
-# # use force so
-# set(CMAKE_FIND_FRAMEWORK NEVER CACHE STRING "..." FORCE)
+# set both normal and cache variables to NEVER. the regular variable has a default of FIRST defined by cmake.
+# but due to CMP0126 that will exist in parallel to the cached variable.
+# set(CMAKE_FIND_FRAMEWORK NEVER STRING "...")
+set(CMAKE_FIND_FRAMEWORK NEVER CACHE STRING "...")
 
-# if(NOT "${CMAKE_FIND_FRAMEWORK}" STREQUAL "NEVER")
-#   message(FATAL_ERROR "CMAKE_FIND_FRAMEWORK is ${CMAKE_FIND_FRAMEWORK} not NEVER. CMAKE_VERSION=${CMAKE_VERSION}")
-# endif()
+if(NOT "${CMAKE_FIND_FRAMEWORK}" STREQUAL "NEVER")
+  message(STATUS "CMAKE_FIND_FRAMEWORK is ${CMAKE_FIND_FRAMEWORK} not NEVER. CMAKE_VERSION=${CMAKE_VERSION}")
+endif()
 
 # External dependencies
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/externals ${PROJECT_SOURCE_DIR}/cmake)
