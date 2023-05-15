@@ -156,8 +156,8 @@ endif()
 
 # set both normal and cache variables to NEVER. the regular variable has a default of FIRST defined by cmake.
 # but due to CMP0126 that will exist in parallel to the cached variable.
-set(CMAKE_FIND_FRAMEWORK NEVER STRING "...")
-set(CMAKE_FIND_FRAMEWORK NEVER CACHE STRING "...")
+set(CMAKE_FIND_FRAMEWORK "NEVER")
+set(CMAKE_FIND_FRAMEWORK "NEVER" CACHE STRING "...")
 
 if(NOT "${CMAKE_FIND_FRAMEWORK}" STREQUAL "NEVER")
   message(STATUS "CMAKE_FIND_FRAMEWORK is ${CMAKE_FIND_FRAMEWORK} not NEVER. CMAKE_VERSION=${CMAKE_VERSION}")
