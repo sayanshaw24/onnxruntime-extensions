@@ -41,6 +41,7 @@ if (WIN32)
   endfunction()
 
   get_vcpkg()
+  vcpkg_install(cmake)
   vcpkg_install(openssl)
   vcpkg_install(openssl-windows)
   vcpkg_install(rapidjson)
@@ -57,6 +58,7 @@ if (WIN32)
   add_dependencies(getre2 getrapidjson)
   add_dependencies(getrapidjson getopenssl-windows)
   add_dependencies(getopenssl-windows getopenssl)
+  add_dependencies(getopenssl getcmake)
 
   ExternalProject_Add(triton
                       GIT_REPOSITORY https://github.com/triton-inference-server/client.git
