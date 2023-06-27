@@ -40,7 +40,7 @@ if (WIN32)
     set(VCPKG_DEPENDENCIES ${VCPKG_DEPENDENCIES} PARENT_SCOPE)
   endfunction()
 
-  get_vcpkg()
+  # get_vcpkg()
   vcpkg_install(cmake)
   vcpkg_install(openssl)
   vcpkg_install(openssl-windows)
