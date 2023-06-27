@@ -41,6 +41,9 @@ if (WIN32)
   endfunction()
 
   # get_vcpkg()
+  set(VCPKG_SRC ${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-src)
+  set(VCPKG_DEPENDENCIES "vcpkg" PARENT_SCOPE)
+
   vcpkg_install(cmake)
   vcpkg_install(openssl)
   vcpkg_install(openssl-windows)
