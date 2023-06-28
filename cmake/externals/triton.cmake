@@ -45,7 +45,7 @@ if (WIN32)
   #get_vcpkg()
   #set(ENV{VCPKG_ROOT} ${VCPKG_SRC})
 
-  set(VCPKG_SRC ${VCPKG_ROOT})
+  set(VCPKG_SRC $ENV{VCPKG_ROOT})
   set(VCPKG_DEPENDENCIES "")
 
   vcpkg_install(cmake)
