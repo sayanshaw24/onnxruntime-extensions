@@ -18,7 +18,7 @@ if (WIN32)
       CONFIGURE_COMMAND ""
       INSTALL_COMMAND "<SOURCE_DIR>/vcpkg --vcpkg-root=<SOURCE_DIR>"
       UPDATE_COMMAND ""
-      BUILD_COMMAND "<SOURCE_DIR>/bootstrap-vcpkg.bat --vcpkg-root")
+      BUILD_COMMAND "<SOURCE_DIR>/bootstrap-vcpkg.bat")
 
     ExternalProject_Get_Property(vcpkg SOURCE_DIR)
     set(VCPKG_SRC ${SOURCE_DIR} PARENT_SCOPE)
