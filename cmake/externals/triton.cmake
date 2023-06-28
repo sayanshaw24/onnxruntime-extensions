@@ -28,7 +28,8 @@ if (WIN32)
   function(vcpkg_install PACKAGE_NAME)
     add_custom_command(
       OUTPUT ${VCPKG_SRC}/packages/${PACKAGE_NAME}_${vcpkg_target_platform}-windows-static/BUILD_INFO
-      COMMAND ${VCPKG_SRC}/vcpkg install ${PACKAGE_NAME}:${vcpkg_target_platform}-windows-static --vcpkg-root=${VCPKG_SRC}
+      #COMMAND ${VCPKG_SRC}/vcpkg install ${PACKAGE_NAME}:${vcpkg_target_platform}-windows-static --vcpkg-root=${VCPKG_SRC}
+      COMMAND ${VCPKG_SRC}/vcpkg install ${PACKAGE_NAME}:${vcpkg_target_platform}-windows-static
       WORKING_DIRECTORY ${VCPKG_SRC}
       DEPENDS vcpkg)
 
@@ -41,8 +42,12 @@ if (WIN32)
   endfunction()
 
   #unset(ENV{VCPKG_ROOT})
-  get_vcpkg()
+  #get_vcpkg()
   #set(ENV{VCPKG_ROOT} ${VCPKG_SRC})
+
+  set(VCPKG_SRC ${VCPKG_ROOT})
+  set(VCPKG_DEPENDENCIES "")
+
   vcpkg_install(cmake)
   vcpkg_install(openssl)
   vcpkg_install(openssl-windows)
