@@ -16,7 +16,7 @@ if (WIN32)
       SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-src
       BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-build
       CONFIGURE_COMMAND ""
-      INSTALL_COMMAND "<SOURCE_DIR>/vcpkg --vcpkg-root=<SOURCE_DIR>"
+      INSTALL_COMMAND ""
       UPDATE_COMMAND ""
       BUILD_COMMAND "<SOURCE_DIR>/bootstrap-vcpkg.bat")
 
@@ -40,6 +40,7 @@ if (WIN32)
     set(VCPKG_DEPENDENCIES ${VCPKG_DEPENDENCIES} PARENT_SCOPE)
   endfunction()
 
+  unset(ENV{VCPKG_ROOT})
   get_vcpkg()
   vcpkg_install(cmake)
   vcpkg_install(openssl)
