@@ -92,6 +92,7 @@ else()
                       CMAKE_ARGS -DBUILD_TESTING=OFF -DBUILD_CURL_EXE=OFF -DBUILD_SHARED_LIBS=OFF -DCURL_STATICLIB=ON -DHTTP_ONLY=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 
   if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+    message(FATAL_ERROR "azure ops build on android")
     list(azure_deps APPEND curl7)
 
   else ()
