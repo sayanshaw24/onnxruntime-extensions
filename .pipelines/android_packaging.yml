@@ -47,7 +47,7 @@ jobs:
           - bash: |
               set -e -x
 
-              set OCOS_ENABLE_AZURE=$(parameters.buildAzureOp)
+              set OCOS_ENABLE_AZURE=$(buildAzureOp)
 
               python ./tools/android/build_aar.py \
                 --output-dir $(Build.BinariesDirectory)/android_aar \
