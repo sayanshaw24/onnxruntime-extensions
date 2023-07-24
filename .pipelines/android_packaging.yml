@@ -1,4 +1,12 @@
 # packaging pipeline for onnxruntime-extensions Android AAR package
+parameters: # parameters are shown up in ADO UI in a build queue time
+- name: BuildAzureOp
+  displayName: 'Build and test AzureEP ops'
+  type: string
+  values:
+  - 'OFF'
+  - 'ON'
+  default: 'OFF'
 
 jobs:
   - job: AndroidPackaging
@@ -7,6 +15,7 @@ jobs:
     timeoutInMinutes: 120
     variables:
       buildConfig: Release
+      buildAzure: ${{ parameters.BuildAzureOp }}
     steps:
       - task: UsePythonVersion@0
         inputs:
@@ -41,7 +50,7 @@ jobs:
               python ./tools/android/build_aar.py \
                 --output-dir $(Build.BinariesDirectory)/android_aar \
                 --config $(buildConfig) \
-                --cmake_extra_defines OCOS_ENABLE_SELECTED_OPLIST=ON
+                --cmake_extra_defines OCOS_ENABLE_SELECTED_OPLIST=ON OCOS_ENABLE_AZURE=$(buildAzure)
 
               VERSION=$(cat ./version.txt)
               AAR_PATH="$(Build.BinariesDirectory)/android_aar/aar_out/$(buildConfig)/com/microsoft/onnxruntime/onnxruntime-extensions-android/${VERSION}/onnxruntime-extensions-android-${VERSION}.aar"

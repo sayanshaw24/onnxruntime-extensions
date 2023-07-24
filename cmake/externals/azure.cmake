@@ -79,6 +79,8 @@ if (WIN32)
 
   add_dependencies(triton ${VCPKG_DEPENDENCIES})
 
+  list(azure_deps APPEND triton)
+
 else()
 
   ExternalProject_Add(curl7
@@ -89,17 +91,23 @@ else()
                       BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/curl7-build
                       CMAKE_ARGS -DBUILD_TESTING=OFF -DBUILD_CURL_EXE=OFF -DBUILD_SHARED_LIBS=OFF -DCURL_STATICLIB=ON -DHTTP_ONLY=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 
-  ExternalProject_Add(triton
-                      GIT_REPOSITORY https://github.com/triton-inference-server/client.git
-                      GIT_TAG r23.05
-                      PREFIX triton
-                      SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/triton-src
-                      BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/triton-build
-                      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=binary -DTRITON_ENABLE_CC_HTTP=ON -DTRITON_ENABLE_ZLIB=OFF
-                      INSTALL_COMMAND ""
-                      UPDATE_COMMAND "")
+  if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+    list(azure_deps APPEND curl7)
 
-  add_dependencies(triton curl7)
+  else ()
+    ExternalProject_Add(triton
+                        GIT_REPOSITORY https://github.com/triton-inference-server/client.git
+                        GIT_TAG r23.05
+                        PREFIX triton
+                        SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/triton-src
+                        BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/triton-build
+                        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=binary -DTRITON_ENABLE_CC_HTTP=ON -DTRITON_ENABLE_ZLIB=OFF
+                        INSTALL_COMMAND ""
+                        UPDATE_COMMAND "")
+
+    add_dependencies(triton curl7)
+    list(azure_deps APPEND triton)
+  endif()
 
 endif() #if (WIN32)
 

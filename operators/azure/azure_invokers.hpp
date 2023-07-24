@@ -34,6 +34,7 @@ struct AzureTextInvoker : public AzureInvoker {
   std::string binary_type_;
 };
 
+#ifndef __ANDROID__
 struct AzureTritonInvoker : public AzureInvoker {
   AzureTritonInvoker(const OrtApi& api, const OrtKernelInfo& info);
   void Compute(const ortc::Variadic& inputs, ortc::Variadic& outputs);
@@ -41,3 +42,4 @@ struct AzureTritonInvoker : public AzureInvoker {
  private:
   std::unique_ptr<triton::client::InferenceServerHttpClient> triton_client_;
 };
+#endif

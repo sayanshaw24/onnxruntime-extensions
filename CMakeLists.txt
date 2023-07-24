@@ -386,7 +386,7 @@ if(OCOS_ENABLE_AZURE)
   endif()
 
   # Azure endpoint invokers
-  include(triton)
+  include(azure)
   file(GLOB TARGET_SRC_AZURE "operators/azure/*.cc" "operators/azure/*.h*")
   list(APPEND TARGET_SRC ${TARGET_SRC_AZURE})
 endif()
@@ -715,7 +715,7 @@ endif()
 
 if(OCOS_ENABLE_AZURE)
 
-  add_dependencies(ocos_operators triton)
+  add_dependencies(ocos_operators azure_deps)
   target_include_directories(ocos_operators PUBLIC ${TRITON_BIN}/include ${TRITON_THIRD_PARTY}/curl/include)
   target_link_directories(ocos_operators PUBLIC ${TRITON_BIN}/lib ${TRITON_BIN}/lib64 ${TRITON_THIRD_PARTY}/curl/lib ${TRITON_THIRD_PARTY}/curl/lib64)
 

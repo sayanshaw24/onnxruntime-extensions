@@ -218,6 +218,7 @@ void AzureTextInvoker::Compute(std::string_view auth, std::string_view input, or
   output.SetStringOutput(std::vector<std::string>{string_buffer.ss_.str()}, std::vector<int64_t>{1L});
 }
 
+#ifndef __ANDROID__
 ////////////////////// AzureTritonInvoker //////////////////////
 
 namespace tc = triton::client;
@@ -423,5 +424,24 @@ const std::vector<const OrtCustomOp*>& AzureInvokerLoader() {
   );
   return op_loader.GetCustomOps();
 }
+
+#else
+
+const std::vector<const OrtCustomOp*>& AzureInvokerLoader() {
+  static OrtOpLoader op_loader(CustomAzureStruct("AzureAudioInvoker", AzureAudioInvoker),
+                               CustomAzureStruct("AzureAudioInvoker", AzureAudioInvoker),
+                               CustomAzureStruct("AzureTextInvoker", AzureTextInvoker)
+
+#ifdef TEST_AZURE_INVOKERS_AS_CPU_OP
+                                   ,
+                               CustomCpuStruct("AzureAudioInvoker", AzureAudioInvoker),
+                               CustomCpuStruct("AzureAudioInvoker", AzureAudioInvoker),
+                               CustomCpuStruct("AzureTextInvoker", AzureTextInvoker)
+#endif
+  );
+  return op_loader.GetCustomOps();
+}
+
+#endif
 
 FxLoadCustomOpFactory LoadCustomOpClasses_Azure = AzureInvokerLoader;
