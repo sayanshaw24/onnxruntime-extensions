@@ -15,7 +15,7 @@ jobs:
     timeoutInMinutes: 120
     variables:
       buildConfig: Release
-      BuildAzureOp: ${{ parameters.BuildAzureOp }}
+      buildAzureOp: ${{ parameters.BuildAzureOp }}
     steps:
       - task: UsePythonVersion@0
         inputs:
@@ -47,7 +47,7 @@ jobs:
           - bash: |
               set -e -x
 
-              set OCOS_ENABLE_AZURE=$(parameters.BuildAzureOp)
+              set OCOS_ENABLE_AZURE=$(parameters.buildAzureOp)
 
               python ./tools/android/build_aar.py \
                 --output-dir $(Build.BinariesDirectory)/android_aar \
