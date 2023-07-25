@@ -211,7 +211,7 @@ def main():
         api_level=args.api_level,
         sdk_path=args.sdk_path,
         ndk_path=args.ndk_path,
-        other_args=args.other_args,
+        other_args=args.other_args if args.other_args != 'NONE' else '',
     )
 
     _log.info("AAR build complete.")

@@ -187,6 +187,8 @@ def _parse_arguments():
     # Language bindings
     parser.add_argument("--build_java", action="store_true", help="Build Java bindings.")
 
+    parser.add_argument("--build_azure", action="store_true", help="Build azure ops.")
+
     args = parser.parse_args()
 
     if not args.build_dir:
