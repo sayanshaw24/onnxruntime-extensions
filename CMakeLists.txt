@@ -713,6 +713,8 @@ if(OCOS_ENABLE_CTEST)
   endif()
 endif()
 
+message(FATAL_ERROR "trigger fail deliberately")
+
 if(OCOS_ENABLE_AZURE)
 
   add_dependencies(ocos_operators azure_deps)

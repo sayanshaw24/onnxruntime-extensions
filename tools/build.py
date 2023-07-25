@@ -398,12 +398,6 @@ def _generate_build_tree(cmake_path: Path,
     if args.build_java:
         cmake_args.append("-DOCOS_BUILD_JAVA=ON")
 
-    if args.enable_azure:
-        print('enable azure build')
-        cmake_args.append("-DOCOS_ENABLE_AZURE=ON")
-    else:
-        print('disable azure build')
-
     cmake_args += ["-D{}".format(define) for define in cmake_extra_defines]
     cmake_args += cmake_extra_args
 
@@ -633,6 +627,12 @@ def main():
                 if args.test:
                     log.warning("Cannot test ARM64 build on X86_64. Will skip test running after build.")
                     args.test = False
+
+        if args.enable_azure:
+            print('enable azure build')
+            cmake_extra_args.append("-DOCOS_ENABLE_AZURE=ON")
+        else:
+            print('disable azure build')
 
         _generate_build_tree(
             cmake_path,
