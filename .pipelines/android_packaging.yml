@@ -47,7 +47,7 @@ jobs:
               python ./tools/android/build_aar.py \
                 --output-dir $(Build.BinariesDirectory)/android_aar \
                 --config $(buildConfig) \
-                --other_args $(otherBuildArgs) \
+                $(otherBuildArgs) \
                 --cmake_extra_defines OCOS_ENABLE_SELECTED_OPLIST=ON
 
               VERSION=$(cat ./version.txt)
