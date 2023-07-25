@@ -398,6 +398,9 @@ def _generate_build_tree(cmake_path: Path,
     if args.build_java:
         cmake_args.append("-DOCOS_BUILD_JAVA=ON")
 
+    if args.build_azure:
+        cmake_args.append("-DOCOS_BUILD_AZURE=ON")
+
     cmake_args += ["-D{}".format(define) for define in cmake_extra_defines]
     cmake_args += cmake_extra_args
 
