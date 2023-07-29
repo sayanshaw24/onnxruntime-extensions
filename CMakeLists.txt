@@ -33,13 +33,13 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
 endif()
 
 # Hopefully don't need this if we set install path in the call to add triton
-# message(STATUS "CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT=${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT}") 
+# message(STATUS "CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT=${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT}")
 # # in theory this test is correct but only returns true on the first run of a build tree
 # if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 #   set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "..." FORCE)
 # endif()
 # set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "..." FORCE)
-# message(STATUS "CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}") 
+# message(STATUS "CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
 
 # Needed for Java
 set(CMAKE_C_STANDARD 99)
@@ -55,7 +55,7 @@ option(OCOS_ENABLE_PYTHON "Enable Python component building, (deprecated)" OFF)
 option(OCOS_ENABLE_CTEST "Enable C++ test" OFF)
 option(OCOS_ENABLE_CPP_EXCEPTIONS "Enable C++ Exception" ON)
 option(OCOS_ENABLE_TF_STRING "Enable String Operator Set" ON)
-option(OCOS_ENABLE_RE2_REGEX "Enable StringRegexReplace and StringRegexSplit" ON)
+option(OCOS_ENABLE_RE2_REGEX "Enable StringRegexReplace and StringRegexSplit" OFF)
 option(OCOS_ENABLE_GPT2_TOKENIZER "Enable the GPT2 tokenizer building" ON)
 option(OCOS_ENABLE_SPM_TOKENIZER "Enable the SentencePiece tokenizer building" ON)
 option(OCOS_ENABLE_WORDPIECE_TOKENIZER "Enable the WordpieceTokenizer building" ON)
@@ -398,13 +398,13 @@ if(OCOS_ENABLE_AZURE)
 
   if (ANDROID)
     include(curl)
-    # exclude triton 
+    # exclude triton
     list(FILTER TARGET_SRC_AZURE EXCLUDE REGEX ".*triton.*")
   else()
     add_compile_definitions(AZURE_INVOKERS_ENABLE_TRITON)
-    include(triton) 
+    include(triton)
   endif()
-  
+
   list(APPEND TARGET_SRC ${TARGET_SRC_AZURE})
 endif()
 
@@ -477,11 +477,12 @@ if(_HAS_TOKENIZER)
 endif()
 
 if(OCOS_ENABLE_TF_STRING)
-  target_include_directories(noexcep_operators PUBLIC
-    ${googlere2_SOURCE_DIR}
-    ${farmhash_SOURCE_DIR}/src)
+  target_include_directories(noexcep_operators PUBLIC ${googlere2_SOURCE_DIR} ${farmhash_SOURCE_DIR}/src)
   list(APPEND OCOS_COMPILE_DEFINITIONS ENABLE_TF_STRING NOMINMAX FARMHASH_NO_BUILTIN_EXPECT FARMHASH_DEBUG=0)
-  target_link_libraries(noexcep_operators PRIVATE re2)
+  if(OCOS_ENABLE_RE2_REGEX)
+    target_include_directories(noexcep_operators PUBLIC ${googlere2_SOURCE_DIR} ${farmhash_SOURCE_DIR}/src)
+    target_link_libraries(noexcep_operators PRIVATE re2)
+  endif()
 endif()
 
 if(OCOS_ENABLE_RE2_REGEX)
@@ -619,6 +620,12 @@ if(OCOS_ENABLE_AZURE)
       set(vcpkg_target_platform ${ocos_target_platform})
     endif()
 
+    # include and link directories for triton and curl
+    target_include_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/include
+                                                     ${triton_THIRD_PARTY_DIR}/curl/include)
+    target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib
+                                                  ${triton_THIRD_PARTY_DIR}/curl/lib)
+
     if (WIN32)
       # As per https://curl.se/docs/faq.html#Link_errors_when_building_libcur we need to set CURL_STATICLIB.
       target_compile_definitions(ocos_operators PRIVATE CURL_STATICLIB)
@@ -626,9 +633,9 @@ if(OCOS_ENABLE_AZURE)
       target_include_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static/include)
       target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static/lib)
       target_link_libraries(ocos_operators PUBLIC httpclient_static libcurl ws2_32 crypt32 Wldap32)
-    else() 
+    else()
       find_package(ZLIB REQUIRED)
-      # if this fails most likely you need to install the triton client package dependencies. 
+      # if this fails most likely you need to install the triton client package dependencies.
       #   https://github.com/triton-inference-server/client
       #   sudo apt update
       #   sudo apt install libcurl4-openssl-dev libb64-dev
@@ -641,12 +648,8 @@ if(OCOS_ENABLE_AZURE)
       #   /usr/lib/x86_64-linux-gnu/libcurl.a
       find_package(OpenSSL REQUIRED)
 
-      target_include_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/include 
-                                                       ${triton_THIRD_PARTY_DIR}/curl/include)
-      target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib 
-                                                    ${triton_THIRD_PARTY_DIR}/curl/lib)
       target_link_libraries(ocos_operators PUBLIC httpclient_static ZLIB::ZLIB OpenSSL::Crypto OpenSSL::SSL)
-    endif() 
+    endif()
   endif()
 endif()
 
