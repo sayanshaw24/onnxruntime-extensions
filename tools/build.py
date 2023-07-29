@@ -408,7 +408,7 @@ def clean_targets(cmake_path, build_dir: Path, configs: Set[str]):
     for config in configs:
         log.info("Cleaning targets for %s configuration", config)
         build_dir2 = _get_build_config_dir(build_dir, config)
-        cmd_args = [cmake_path, "--build", build_dir2, "--config", config, "--target", "clean"]
+        cmd_args = [str(cmake_path), "--build", str(build_dir2), "--config", config, "--target", "clean"]
 
         _run_subprocess(cmd_args)
 

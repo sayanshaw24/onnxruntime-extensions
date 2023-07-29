@@ -32,6 +32,15 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0077 NEW)
 endif()
 
+# Hopefully don't need this if we set install path in the call to add triton
+# message(STATUS "CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT=${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT}") 
+# # in theory this test is correct but only returns true on the first run of a build tree
+# if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+#   set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "..." FORCE)
+# endif()
+# set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "..." FORCE)
+# message(STATUS "CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}") 
+
 # Needed for Java
 set(CMAKE_C_STANDARD 99)
 
@@ -600,9 +609,9 @@ if(OCOS_ENABLE_AZURE)
   elseif(IOS)
     # TODO
   else()
+    # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build
+    # so add a dependency so the fetch and build of triton happens first.
     add_dependencies(ocos_operators triton)
-    target_include_directories(ocos_operators PUBLIC ${TRITON_BIN}/include)
-    target_link_directories(ocos_operators PUBLIC ${TRITON_BIN}/lib ${TRITON_BIN}/lib64 )
 
     if (ocos_target_platform STREQUAL "AMD64")
       set(vcpkg_target_platform "x64")  # Was 'x86' but not clear Why are we choosing 32-bit if target is 64-bit?
@@ -617,10 +626,26 @@ if(OCOS_ENABLE_AZURE)
       target_include_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static/include)
       target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static/lib)
       target_link_libraries(ocos_operators PUBLIC httpclient_static libcurl ws2_32 crypt32 Wldap32)
-    else()
+    else() 
       find_package(ZLIB REQUIRED)
+      # if this fails most likely you need to install the triton client package dependencies. 
+      #   https://github.com/triton-inference-server/client
+      #   sudo apt update
+      #   sudo apt install libcurl4-openssl-dev libb64-dev
+      #
+      # TODO: Should we use curl.h from this package or the triton build?
+      # Install location may be a little tricky. On Ubuntu according to `dpkg -L libcurl4-openssl-dev` we'd need these
+      # files. Not sure how they differ across platforms. At least the location of the triton curl build would be
+      # consistent.
+      #   /usr/include/x86_64-linux-gnu/curl/curl.h
+      #   /usr/lib/x86_64-linux-gnu/libcurl.a
       find_package(OpenSSL REQUIRED)
-      target_link_libraries(ocos_operators PUBLIC httpclient_static curl ZLIB::ZLIB OpenSSL::Crypto OpenSSL::SSL)
+
+      target_include_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/include 
+                                                       ${triton_THIRD_PARTY_DIR}/curl/include)
+      target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib 
+                                                    ${triton_THIRD_PARTY_DIR}/curl/lib)
+      target_link_libraries(ocos_operators PUBLIC httpclient_static ZLIB::ZLIB OpenSSL::Crypto OpenSSL::SSL)
     endif() 
   endif()
 endif()
