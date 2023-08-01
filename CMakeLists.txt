@@ -612,12 +612,8 @@ if(OCOS_ENABLE_AZURE)
     # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build
     # so add a dependency so the fetch and build of triton happens first.
     add_dependencies(ocos_operators triton)
-
-    # include and link directories for triton and curl
-    target_include_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/include
-                                                     ${triton_THIRD_PARTY_DIR}/curl/include)
-    target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib
-                                                  ${triton_THIRD_PARTY_DIR}/curl/lib)
+    target_include_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/include)
+    target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib)
 
     if (WIN32)
       if (ocos_target_platform STREQUAL "AMD64")
@@ -636,29 +632,33 @@ if(OCOS_ENABLE_AZURE)
         target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/debug/lib)
       else()
         set(curl_LIB_NAME "libcurl")
-      target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/lib)
+        target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/lib)
       endif()
 
       target_link_libraries(ocos_operators PUBLIC httpclient_static ${curl_LIB_NAME} ws2_32 crypt32 Wldap32)
     else()
       find_package(ZLIB REQUIRED)
 
-      # if finding the OpenSSL or CURL package fails most likely you need to install the triton client package
-      #  dependencies.
-      #   https://github.com/triton-inference-server/client
-      #   sudo apt update
-      #   sudo apt install libcurl4-openssl-dev libb64-dev      
+      # If finding the OpenSSL or CURL package fails for a local build you can install libcurl4-openssl-dev. 
+      # See also info on triton client dependencies here: https://github.com/triton-inference-server/client
       find_package(OpenSSL REQUIRED)
       find_package(CURL)
-      if (CURL_Found)
+      if (CURL_FOUND)
         message(STATUS "Found CURL package")
+        set(libcurl_target CURL::libcurl)
       else()
-        message(STATUS "Adding CMAKE_FIND_ROOT_PATH of ${${triton_THIRD_PARTY_DIR}/curl}")
-        list(APPEND CMAKE_FIND_ROOT_PATH "${triton_THIRD_PARTY_DIR}/curl" )
-        find_package(CURL REQUIRED)
+        # curl is coming from triton but as that's an external project it isn't built yet
+        message(STATUS "Using CURL build from triton client: ${triton_THIRD_PARTY_DIR}/curl")
+        target_include_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/include)
+        target_link_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/lib)
+        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+          set(libcurl_target "curl-d")
+        else()
+          set(libcurl_target "curl")
+        endif()        
       endif()
 
-      target_link_libraries(ocos_operators PUBLIC httpclient_static CURL::libcurl ZLIB::ZLIB OpenSSL::Crypto OpenSSL::SSL)
+      target_link_libraries(ocos_operators PUBLIC httpclient_static ${libcurl_target} OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB)
     endif()
   endif()
 endif()
