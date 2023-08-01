@@ -647,9 +647,16 @@ if(OCOS_ENABLE_AZURE)
       #  dependencies.
       #   https://github.com/triton-inference-server/client
       #   sudo apt update
-      #   sudo apt install libcurl4-openssl-dev libb64-dev
+      #   sudo apt install libcurl4-openssl-dev libb64-dev      
       find_package(OpenSSL REQUIRED)
-      find_package(CURL REQUIRED)
+      find_package(CURL)
+      if (CURL_Found)
+        message(STATUS "Found CURL package")
+      else()
+        message(STATUS "Adding CMAKE_FIND_ROOT_PATH of ${${triton_THIRD_PARTY_DIR}/curl}")
+        list(APPEND CMAKE_FIND_ROOT_PATH "${triton_THIRD_PARTY_DIR}/curl" )
+        find_package(CURL REQUIRED)
+      endif()
 
       target_link_libraries(ocos_operators PUBLIC httpclient_static CURL::libcurl ZLIB::ZLIB OpenSSL::Crypto OpenSSL::SSL)
     endif()
