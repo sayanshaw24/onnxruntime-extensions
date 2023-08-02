@@ -127,8 +127,4 @@ set(triton_THIRD_PARTY_DIR ${BINARY_DIR}/third-party)
 
 # an x86 build on CentOS also needs this due to the hardcoded usage of find_package(CURL) here
 # https://github.com/triton-inference-server/client/blob/54717d6adb67c15f11b50b0389c426eecb5470da/src/c%2B%2B/CMakeLists.txt#L103
-# Also add for an x64 build for consistency.
-list(APPEND CMAKE_FIND_ROOT_PATH "${triton_THIRD_PARTY_DIR}/curl/lib" )
-list(APPEND CMAKE_FIND_ROOT_PATH "${triton_THIRD_PARTY_DIR}/curl" )
-message(STATUS "CMAKE_FIND_ROOT_PATH+=${triton_THIRD_PARTY_DIR}/curl/lib")
-
+# list(APPEND CMAKE_FIND_ROOT_PATH "${triton_THIRD_PARTY_DIR}/curl" )
