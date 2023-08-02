@@ -613,7 +613,20 @@ if(OCOS_ENABLE_AZURE)
     # so add a dependency so the fetch and build of triton happens first.
     add_dependencies(ocos_operators triton)
     target_include_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/include)
+
+    # /etc/os-release does not exist on Windows
+    # if(EXISTS "/etc/os-release")
+    #   file(STRINGS /etc/os-release DISTRO REGEX "^NAME=")
+    #   string(REGEX REPLACE "NAME=\"(.*)\"" "\\1" DISTRO "${DISTRO}")
+    #   message(STATUS "Distro Name: ${DISTRO}")
+    #   if(DISTRO STREQUAL "CentOS Linux")
+    #     set (CURL_LIB_DIR "lib64")
+    #   endif()
+    # endif()
+
     target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib)
+    target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib64)
+    message(STATUS "Added ${triton_INSTALL_DIR}/lib64")
 
     if (WIN32)
       if (ocos_target_platform STREQUAL "AMD64")
@@ -650,7 +663,11 @@ if(OCOS_ENABLE_AZURE)
         # curl is coming from triton but as that's an external project it isn't built yet
         message(STATUS "Using CURL build from triton client: ${triton_THIRD_PARTY_DIR}/curl")
         target_include_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/include)
+        # lib generally. lib64 on CentOS which is used by the manylinux build of the python wheel
         target_link_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/lib)
+        target_link_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/lib64)
+        message(STATUS "Added ${triton_THIRD_PARTY_DIR}/curl/lib64")
+
         if (CMAKE_BUILD_TYPE STREQUAL "Debug")
           set(libcurl_target "curl-d")
         else()
