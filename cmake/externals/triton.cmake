@@ -125,6 +125,3 @@ add_dependencies(triton ${triton_dependencies})
 ExternalProject_Get_Property(triton SOURCE_DIR BINARY_DIR)
 set(triton_THIRD_PARTY_DIR ${BINARY_DIR}/third-party)
 
-# an x86 build on CentOS also needs this due to the hardcoded usage of find_package(CURL) here
-# https://github.com/triton-inference-server/client/blob/54717d6adb67c15f11b50b0389c426eecb5470da/src/c%2B%2B/CMakeLists.txt#L103
-# list(APPEND CMAKE_FIND_ROOT_PATH "${triton_THIRD_PARTY_DIR}/curl" )

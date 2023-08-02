@@ -609,24 +609,13 @@ if(OCOS_ENABLE_AZURE)
   elseif(IOS)
     # TODO
   else()
-    # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build
-    # so add a dependency so the fetch and build of triton happens first.
+    # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build.
+    # add a dependency so the fetch and build of triton happens first.
     add_dependencies(ocos_operators triton)
     target_include_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/include)
 
-    # /etc/os-release does not exist on Windows
-    # if(EXISTS "/etc/os-release")
-    #   file(STRINGS /etc/os-release DISTRO REGEX "^NAME=")
-    #   string(REGEX REPLACE "NAME=\"(.*)\"" "\\1" DISTRO "${DISTRO}")
-    #   message(STATUS "Distro Name: ${DISTRO}")
-    #   if(DISTRO STREQUAL "CentOS Linux")
-    #     set (CURL_LIB_DIR "lib64")
-    #   endif()
-    # endif()
-
     target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib)
     target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib64)
-    message(STATUS "Added ${triton_INSTALL_DIR}/lib64")
 
     if (WIN32)
       if (ocos_target_platform STREQUAL "AMD64")
@@ -640,7 +629,6 @@ if(OCOS_ENABLE_AZURE)
       target_include_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/include)
 
       if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        # TODO: Can we get this name from vcpkg instead of having to hardcode it?
         set(curl_LIB_NAME "libcurl-d")
         target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/debug/lib)
       else()
@@ -654,21 +642,24 @@ if(OCOS_ENABLE_AZURE)
 
       # If finding the OpenSSL or CURL package fails for a local build you can install libcurl4-openssl-dev. 
       # See also info on triton client dependencies here: https://github.com/triton-inference-server/client
-      find_package(OpenSSL REQUIRED)
+      find_package(OpenSSL REQUIRED)      
       find_package(CURL)
+
       if (CURL_FOUND)
         message(STATUS "Found CURL package")
         set(libcurl_target CURL::libcurl)
       else()
         # curl is coming from triton but as that's an external project it isn't built yet and we have to add
         # paths and library names instead of cmake targets.
-        message(STATUS "Using CURL build from triton client: ${triton_THIRD_PARTY_DIR}/curl")
+        message(STATUS "Using CURL build from triton client. Once built it should be in ${triton_THIRD_PARTY_DIR}/curl")
         target_include_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/include)
-        # lib generally. lib64 on CentOS which is used by the manylinux build of the python wheel
+
+        # Install is to 'lib' except on CentOS (which is used for the manylinux build of the python wheel).
+        # Side note: we have to patch the triton client CMakeLists.txt to only use 'lib64' for 64-bit builds otherwise
+        #            the build of the 32-bit python wheel fails with CURL not being found due to the invalid library
+        #            directory name.
         target_link_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/lib)
         target_link_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/lib64)
-        message(STATUS "Added ${triton_THIRD_PARTY_DIR}/curl/lib64")
-        message(STATUS "XXX CMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR} CMAKE_SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P}")
 
         if (CMAKE_BUILD_TYPE STREQUAL "Debug")
           set(libcurl_target "curl-d")
