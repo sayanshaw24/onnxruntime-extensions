@@ -105,6 +105,8 @@ else()
 endif() #if (WIN32)
 
 # Add the triton build. We just need the library so we don't install it.
+# Patch one of the cmake files to use the full path to the version script file to work around an issue with the 
+# python wheel manylinux build on centos 7.
 ExternalProject_Add(triton
                     URL https://github.com/triton-inference-server/client/archive/refs/heads/r23.05.tar.gz
                     URL_HASH SHA1=b8fd2a4e09eae39c33cd04cfa9ec934e39d9afc1
@@ -113,8 +115,10 @@ ExternalProject_Add(triton
                                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                                -DTRITON_ENABLE_CC_HTTP=ON
                                -DTRITON_ENABLE_ZLIB=OFF
-                               ${triton_extra_cmake_args}
-                    INSTALL_COMMAND cmake -E echo "Skipping install step.")
+                               ${triton_extra_cmake_args}                    
+                    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping install step."
+                    PATCH_COMMAND patch --verbose -p1 -i ${PROJECT_SOURCE_DIR}/cmake/externals/triton_cmake.patch
+                    )
 
 add_dependencies(triton ${triton_dependencies})
 
