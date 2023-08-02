@@ -660,7 +660,8 @@ if(OCOS_ENABLE_AZURE)
         message(STATUS "Found CURL package")
         set(libcurl_target CURL::libcurl)
       else()
-        # curl is coming from triton but as that's an external project it isn't built yet
+        # curl is coming from triton but as that's an external project it isn't built yet and we have to add
+        # paths and library names instead of cmake targets.
         message(STATUS "Using CURL build from triton client: ${triton_THIRD_PARTY_DIR}/curl")
         target_include_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/include)
         # lib generally. lib64 on CentOS which is used by the manylinux build of the python wheel
@@ -694,8 +695,7 @@ if(_BUILD_SHARED_LIBRARY)
     set_property(TARGET extensions_shared APPEND_STRING PROPERTY LINK_FLAGS "-Wl,-s -Wl,--version-script -Wl,${PROJECT_SOURCE_DIR}/shared/ortcustomops.ver")
   endif()
 
-  target_include_directories(extensions_shared PUBLIC
-    "$<TARGET_PROPERTY:ortcustomops,INTERFACE_INCLUDE_DIRECTORIES>")
+  target_include_directories(extensions_shared PUBLIC "$<TARGET_PROPERTY:ortcustomops,INTERFACE_INCLUDE_DIRECTORIES>")
   target_link_libraries(extensions_shared PRIVATE ortcustomops)
   set_target_properties(extensions_shared PROPERTIES OUTPUT_NAME "ortextensions")
   if(MSVC AND ocos_target_platform MATCHES "x86|x64")
