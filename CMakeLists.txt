@@ -668,7 +668,7 @@ if(OCOS_ENABLE_AZURE)
         target_link_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/lib)
         target_link_directories(ocos_operators PUBLIC ${triton_THIRD_PARTY_DIR}/curl/lib64)
         message(STATUS "Added ${triton_THIRD_PARTY_DIR}/curl/lib64")
-        message(STATUS "XXX CMAKE_SYSTEM_PROCESSir=${CMAKE_SYSTEM_PROCESSir} CMAKE_SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P}")
+        message(STATUS "XXX CMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR} CMAKE_SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P}")
 
         if (CMAKE_BUILD_TYPE STREQUAL "Debug")
           set(libcurl_target "curl-d")
