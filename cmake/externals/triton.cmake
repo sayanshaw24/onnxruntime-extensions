@@ -4,12 +4,6 @@ set(triton_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps/triton)
 set(triton_INSTALL_DIR ${triton_PREFIX}/install)
 
 if (WIN32)
-  if (ocos_target_platform STREQUAL "AMD64")
-    set(vcpkg_target_platform "x64")
-  else()
-    set(vcpkg_target_platform ${ocos_target_platform})
-  endif()
-
   set(vcpkg_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg)
 
   ExternalProject_Add(vcpkg

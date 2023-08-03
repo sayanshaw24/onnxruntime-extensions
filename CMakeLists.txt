@@ -58,7 +58,7 @@ option(OCOS_ENABLE_OPENCV_CODECS "Enable cv2 and vision operators that require o
 option(OCOS_ENABLE_CV2 "Enable the operators in `operators/cv2`" ON)
 option(OCOS_ENABLE_VISION "Enable the operators in `operators/vision`" ON)
 option(OCOS_ENABLE_AUDIO "Enable the operators for audio processing" ON)
-option(OCOS_ENABLE_AZURE "Enable the operators for azure execution provider" OFF)
+option(OCOS_ENABLE_AZURE "Enable the operators for azure execution provider" ON)
 
 option(OCOS_ENABLE_STATIC_LIB "Enable generating static library" OFF)
 option(OCOS_ENABLE_SELECTED_OPLIST "Enable including the selected_ops tool file" OFF)
@@ -393,6 +393,22 @@ if(OCOS_ENABLE_AZURE)
     list(FILTER TARGET_SRC_AZURE EXCLUDE REGEX ".*triton.*")
   else()
     add_compile_definitions(AZURE_INVOKERS_ENABLE_TRITON)
+
+    # need to set the correct vcpkg target platform strings before including triton
+    if (WIN32)
+      if (ocos_target_platform STREQUAL "AMD64")
+        set(vcpkg_target_platform "x64")
+      elseif(ocos_target_platform STREQUAL "Win32")
+        set(vcpkg_target_platform "x86")
+      elseif(ocos_target_platform STREQUAL "ARM64")
+        set(vcpkg_target_platform "arm64")
+      elseif(ocos_target_platform STREQUAL "ARM")
+        set(vcpkg_target_platform "arm")
+      else()
+        status(FATAL_ERROR "Unexpected ocos_target_platform: ${ocos_target_platform}")
+      endif()
+    endif()
+
     include(triton)
   endif()
 
@@ -613,12 +629,6 @@ if(OCOS_ENABLE_AZURE)
     target_link_directories(ocos_operators PUBLIC ${triton_INSTALL_DIR}/lib64)
 
     if (WIN32)
-      if (ocos_target_platform STREQUAL "AMD64")
-        set(vcpkg_target_platform "x64")
-      else()
-        set(vcpkg_target_platform ${ocos_target_platform})
-      endif()
-
       # As per https://curl.se/docs/faq.html#Link_errors_when_building_libcur we need to set CURL_STATICLIB.
       target_compile_definitions(ocos_operators PRIVATE CURL_STATICLIB)
       target_include_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/include)
