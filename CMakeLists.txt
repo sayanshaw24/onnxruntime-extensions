@@ -407,6 +407,16 @@ if(OCOS_ENABLE_AZURE)
       else()
         status(FATAL_ERROR "Unexpected ocos_target_platform: ${ocos_target_platform}")
       endif()
+
+      if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        # use static-md so it adjusts to use debug CRT.
+        # https://stackoverflow.com/questions/67258905/vcpkg-difference-between-windows-windows-static-and-other
+        set(vcpkg_triplet ${vcpkg_target_platform}-windows-static-md)
+      else()
+        set(vcpkg_triplet ${vcpkg_target_platform}-windows-static)
+      endif()
+
+      message(STATUS "vcpkg_triplet: ${vcpkg_triplet}")
     endif()
 
     include(triton)
@@ -631,14 +641,14 @@ if(OCOS_ENABLE_AZURE)
     if (WIN32)
       # As per https://curl.se/docs/faq.html#Link_errors_when_building_libcur we need to set CURL_STATICLIB.
       target_compile_definitions(ocos_operators PRIVATE CURL_STATICLIB)
-      target_include_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/include)
+      target_include_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_triplet}/include)
 
       if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(curl_LIB_NAME "libcurl-d")
-        target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/debug/lib)
+        target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_triplet}/debug/lib)
       else()
         set(curl_LIB_NAME "libcurl")
-        target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_target_platform}-windows-static-md/lib)
+        target_link_directories(ocos_operators PUBLIC ${VCPKG_SRC}/installed/${vcpkg_triplet}/lib)
       endif()
 
       target_link_libraries(ocos_operators PUBLIC httpclient_static ${curl_LIB_NAME} ws2_32 crypt32 Wldap32)
