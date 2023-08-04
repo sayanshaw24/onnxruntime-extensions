@@ -25,6 +25,7 @@ def prebuild(abi: str, ndk_path: Path):
     os.environ['ANDROID_NDK_ROOT'] = str(ndk_path)
     prebuild_dir = _repo_dir / "prebuild"
     prebuild_cmd = [
+        "/bin/bash",
         "build_curl_for_android.sh",
         abi
     ]
