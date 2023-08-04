@@ -93,7 +93,7 @@ class BuildCMakeExt(_build_ext):
 
         if os.environ.get('OCOS_ENABLE_AZURE') == '1':
             cmake_args += ['-DOCOS_ENABLE_AZURE=ON']
-            print ('azure ops enabled')
+            print('azure ops enabled')
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.

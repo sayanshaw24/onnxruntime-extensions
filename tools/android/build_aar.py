@@ -20,6 +20,17 @@ from utils import get_logger, is_windows, run  # noqa
 _supported_abis = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
 _log = get_logger("build_aar")
 
+# run the prebuild to create the curl and openssl libraries for the Azure custom ops
+def prebuild(abi: str, ndk_path: Path):
+    os.environ['ANDROID_NDK_ROOT'] = str(ndk_path)
+    prebuild_dir = _repo_dir / prebuild
+    prebuild_cmd = [
+        "build_curl_for_android.sh",
+        abi
+    ]
+
+    run(*prebuild_cmd, cwd=str(prebuild_dir))
+
 
 def build_for_abi(
     build_dir: Path, config: str, abi: str, api_level: int, sdk_path: Path, ndk_path: Path, other_args: List[str]):
@@ -64,6 +75,8 @@ def do_build_by_mode(output_dir: Path,
 
     if mode in ["build_so_only", "build_aar"]:
         for abi in abis:
+            prebuild(abi, ndk_path)
+
             build_dir = intermediates_dir / abi
             build_for_abi(build_dir, config, abi, api_level, sdk_path, ndk_path, other_args)
 
