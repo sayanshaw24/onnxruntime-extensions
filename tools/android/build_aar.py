@@ -23,7 +23,7 @@ _log = get_logger("build_aar")
 # run the prebuild to create the curl and openssl libraries for the Azure custom ops
 def prebuild(abi: str, ndk_path: Path):
     os.environ['ANDROID_NDK_ROOT'] = str(ndk_path)
-    prebuild_dir = _repo_dir / prebuild
+    prebuild_dir = _repo_dir / "prebuild"
     prebuild_cmd = [
         "build_curl_for_android.sh",
         abi
