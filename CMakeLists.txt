@@ -396,6 +396,9 @@ if(OCOS_ENABLE_AZURE)
 
     # need to set the correct vcpkg target platform strings before including triton
     if (WIN32)
+      set(vcpkg_target_platform ${ocos_target_platform})
+
+      # remap known variants
       if (ocos_target_platform STREQUAL "AMD64")
         set(vcpkg_target_platform "x64")
       elseif(ocos_target_platform STREQUAL "Win32")
@@ -404,8 +407,10 @@ if(OCOS_ENABLE_AZURE)
         set(vcpkg_target_platform "arm64")
       elseif(ocos_target_platform STREQUAL "ARM")
         set(vcpkg_target_platform "arm")
-      else()
-        status(FATAL_ERROR "Unexpected ocos_target_platform: ${ocos_target_platform}")
+      endif()
+
+      if(NOT "${vcpkg_target_platform}" MATCHES "^(x64|x86|arm64|arm)$")
+        message(FATAL_ERROR "Unexpected ocos_target_platform: ${ocos_target_platform}")
       endif()
 
       if (CMAKE_BUILD_TYPE STREQUAL "Debug")
