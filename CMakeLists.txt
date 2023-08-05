@@ -378,10 +378,11 @@ if(OCOS_ENABLE_BLINGFIRE)
   list(APPEND TARGET_SRC ${blingfire_TARGET_SRC})
 endif()
 
+message(STATUS "APPLE=${APPLE}")
 # build isn't setup for macOS or iOS yet
 # link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash) that needs to be investigated.
 # not sure if they're available on ARM 32. we explicitly add crypt32 to the link list which is where they should be defined.
-if(OCOS_ENABLE_AZURE AND (MACOS OR IOS OR (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")))
+if(OCOS_ENABLE_AZURE AND (APPLE OR (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")))
   message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, or 32-bit ARM. "
                  "Excluding them from the build.")
   set(OCOS_ENABLE_AZURE OFF)

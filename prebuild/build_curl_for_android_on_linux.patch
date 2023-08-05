@@ -56,12 +56,13 @@ index e13c314..5660cec 100755
  source ./build-android-common.sh
  
  if [ -z ${version+x} ]; then 
-@@ -115,6 +115,8 @@ function configure_make() {
+@@ -115,6 +115,9 @@ function configure_make() {
      if [ $the_rc -eq 0 ] ; then
          make SHLIB_EXT='.so' install_sw >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
          make install_ssldirs >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
 +    else
 +        log_error "make returned $the_rc"
++        return $the_rc
      fi
  
      popd

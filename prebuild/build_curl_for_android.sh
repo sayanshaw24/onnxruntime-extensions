@@ -4,6 +4,7 @@
 
 set -e
 set -u
+set -x -v
 
 # change to the directory the script is in in case it's being executed from elsewhere
 cd "$(dirname "$0")"
