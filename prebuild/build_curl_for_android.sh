@@ -4,10 +4,13 @@
 
 set -e
 set -u
-set -x
 
-# export skip_checkout if you want to repeat a build
-if [ -z ${skip_checkout+x} ]; then
+# change to the directory the script is in in case it's being executed from elsewhere
+cd "$(dirname "$0")"
+
+# to simplify we only fetch and patch if the directory doesn't exist. 
+# if something fails during this stage you need to delete the directory to retry.
+if [ ! -d "openssl_for_ios_and_android" ]; then
     git clone https://github.com/leenjewel/openssl_for_ios_and_android.git
     cd openssl_for_ios_and_android
     git checkout ci-release-663da9e2
