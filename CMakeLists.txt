@@ -378,6 +378,15 @@ if(OCOS_ENABLE_BLINGFIRE)
   list(APPEND TARGET_SRC ${blingfire_TARGET_SRC})
 endif()
 
+# build isn't setup for macOS or iOS yet
+# link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash) that needs to be investigated.
+# not sure if they're available on ARM 32. we explicitly add crypt32 to the link list which is where they should be defined.
+if(OCOS_ENABLE_AZURE AND (MACOS OR IOS OR (MSVC AND ${CMAKE_GENERATOR_PLATFORM} EQUAL "ARM")))
+  message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, or 32-bit ARM. "
+                 "Excluding them from the build.")
+  set(OCOS_ENABLE_AZURE OFF)
+endif()
+
 if(OCOS_ENABLE_AZURE)
   # Azure endpoint invokers
   file(GLOB TARGET_SRC_AZURE "operators/azure/*.cc" "operators/azure/*.h*")
@@ -389,7 +398,7 @@ if(OCOS_ENABLE_AZURE)
     find_package(OpenSSL REQUIRED)
     find_package(CURL REQUIRED)
 
-    # exclude triton
+    # exclude triton as it's not supported on Android
     list(FILTER TARGET_SRC_AZURE EXCLUDE REGEX ".*triton.*")
   else()
     add_compile_definitions(AZURE_INVOKERS_ENABLE_TRITON)
@@ -413,13 +422,13 @@ if(OCOS_ENABLE_AZURE)
         message(FATAL_ERROR "Unexpected ocos_target_platform: ${ocos_target_platform}")
       endif()
 
-      if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+      # if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         # use static-md so it adjusts to use debug CRT.
         # https://stackoverflow.com/questions/67258905/vcpkg-difference-between-windows-windows-static-and-other
         set(vcpkg_triplet ${vcpkg_target_platform}-windows-static-md)
-      else()
-        set(vcpkg_triplet ${vcpkg_target_platform}-windows-static)
-      endif()
+      # else()
+      #  set(vcpkg_triplet ${vcpkg_target_platform}-windows-static)
+      # endif()
 
       message(STATUS "vcpkg_triplet: ${vcpkg_triplet}")
     endif()
@@ -632,8 +641,6 @@ if(OCOS_ENABLE_AZURE)
   if (ANDROID)
     # the find_package calls were made immediately after `include(curl)` so we know CURL and OpenSSL are available
     target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
-  elseif(IOS)
-    # TODO
   else()
     # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build.
     # add a dependency so the fetch and build of triton happens first.
@@ -712,6 +719,11 @@ if(_BUILD_SHARED_LIBRARY)
   set_target_properties(extensions_shared PROPERTIES OUTPUT_NAME "ortextensions")
   if(MSVC AND ocos_target_platform MATCHES "x86|x64")
     target_link_options(extensions_shared PRIVATE "/CETCOMPAT")
+  endif()
+
+  # TEMPORARY to debug LIBCMT issue
+  if(MSVC)
+    target_link_options(extensions_shared PRIVATE "/VERBOSE:LIB")
   endif()
 
   # Set some properties of your target
