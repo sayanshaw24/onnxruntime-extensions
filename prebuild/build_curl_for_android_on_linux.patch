@@ -61,8 +61,8 @@ index e13c314..5660cec 100755
          make SHLIB_EXT='.so' install_sw >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
          make install_ssldirs >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
 +    else
-+        log_error "make returned $the_rc"
-+        return $the_rc
++        cat "${OUTPUT_ROOT}/log/${ABI}.log"
++        log_error "make returned $the_rc" && exit $the_rc
      fi
  
      popd
