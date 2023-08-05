@@ -381,7 +381,7 @@ endif()
 # build isn't setup for macOS or iOS yet
 # link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash) that needs to be investigated.
 # not sure if they're available on ARM 32. we explicitly add crypt32 to the link list which is where they should be defined.
-if(OCOS_ENABLE_AZURE AND (MACOS OR IOS OR (MSVC AND ${CMAKE_GENERATOR_PLATFORM} EQUAL "ARM")))
+if(OCOS_ENABLE_AZURE AND (MACOS OR IOS OR (MSVC AND ${CMAKE_GENERATOR_PLATFORM} STREQUAL "ARM")))
   message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, or 32-bit ARM. "
                  "Excluding them from the build.")
   set(OCOS_ENABLE_AZURE OFF)
@@ -422,6 +422,8 @@ if(OCOS_ENABLE_AZURE)
         message(FATAL_ERROR "Unexpected ocos_target_platform: ${ocos_target_platform}")
       endif()
 
+      # TODO: Resolve this. 'static-md' isn't available on arm 32-bit.
+      # Do we need to specify /NODEFAULTLIB to get a clean build?
       # if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         # use static-md so it adjusts to use debug CRT.
         # https://stackoverflow.com/questions/67258905/vcpkg-difference-between-windows-windows-static-and-other
