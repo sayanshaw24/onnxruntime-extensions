@@ -383,7 +383,7 @@ message(STATUS "APPLE=${APPLE}")
 # link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash) that needs to be investigated.
 # not sure if they're available on ARM 32. we explicitly add crypt32 to the link list which is where they should be defined.
 if(OCOS_ENABLE_AZURE AND (APPLE OR (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")))
-  message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, or 32-bit ARM. "
+  message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, or Windows 32-bit ARM. "
                  "Excluding them from the build.")
   set(OCOS_ENABLE_AZURE OFF)
 endif()
@@ -642,8 +642,10 @@ endif()
 
 if(OCOS_ENABLE_AZURE)
   if (ANDROID)
-    # the find_package calls were made immediately after `include(curl)` so we know CURL and OpenSSL are available
-    target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
+    # the find_package calls were made immediately after `include(curl)` so we know CURL and OpenSSL are available.
+    # find_package doesn't work for nghttp2 so manually add the path and lib name
+    target_link_directories(ocos_operators PUBLIC ${NGHTTP2_ROOT_DIR}/lib)
+    target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL nghttp2)
   else()
     # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build.
     # add a dependency so the fetch and build of triton happens first.

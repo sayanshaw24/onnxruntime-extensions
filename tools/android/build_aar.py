@@ -24,6 +24,13 @@ _log = get_logger("build_aar")
 def prebuild(abi: str, ndk_path: Path, api_level: int):
     prebuild_dir = _repo_dir / "prebuild"
 
+    # skip if curl binary is found. that is created as the last stage of the prebuild, so if it was successfully
+    # installed in the output dir we assume the prebuild completed previously.
+    curl_bin = prebuild_dir / "openssl_for_ios_and_android" / "output" / "android" / ("curl-" + abi) / "bin" / "curl"
+    if curl_bin.exists():
+        print(f"Found {curl_bin}. Assuming prebuild has completed previously. Skipping prebuild.")
+        return
+
     # set some environment variables required by the script
     os.environ['ANDROID_API_LEVEL'] = str(api_level)
     os.environ['ANDROID_NDK_ROOT'] = str(ndk_path)

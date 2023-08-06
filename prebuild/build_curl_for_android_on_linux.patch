@@ -61,8 +61,31 @@ index 87df207..6f3ec66 100755
      export CXXFLAGS="-std=c++14 -Os -ffunction-sections -fdata-sections"
      export LDFLAGS="-march=x86-64 -Wl,--gc-sections -Os -ffunction-sections -fdata-sections $(get_common_linked_libraries ${api} ${arch})"
      export CPPFLAGS=${CFLAGS}
+diff --git a/tools/build-android-curl.sh b/tools/build-android-curl.sh
+index b82d2bd..cd5cb3d 100755
+--- a/tools/build-android-curl.sh
++++ b/tools/build-android-curl.sh
+@@ -93,15 +93,15 @@ function configure_make() {
+ 
+     if [[ "${ARCH}" == "x86_64" ]]; then
+ 
+-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
++        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-shared --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+ 
+     elif [[ "${ARCH}" == "x86" ]]; then
+ 
+-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
++        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-shared --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+ 
+     elif [[ "${ARCH}" == "arm" ]]; then
+ 
+-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
++        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-shared --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+ 
+     elif [[ "${ARCH}" == "arm64" ]]; then
+ 
 diff --git a/tools/build-android-openssl.sh b/tools/build-android-openssl.sh
-index e13c314..f0c15ab 100755
+index e13c314..4965e59 100755
 --- a/tools/build-android-openssl.sh
 +++ b/tools/build-android-openssl.sh
 @@ -16,7 +16,7 @@
@@ -70,7 +93,7 @@ index e13c314..f0c15ab 100755
  # # read -n1 -p "Press any key to continue..."
  
 -set -u
-+set -u -x
++set -u -e
  
  source ./build-android-common.sh
  

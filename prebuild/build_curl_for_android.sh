@@ -35,7 +35,7 @@ echo $api
 # provide a specific architecture as an argument to the script to limit the build to that
 # default is to build all
 # valid architecture values: "arm" "arm64" "x86" "x86_64"
-if [ $# -gt 1 ]; then
+if [ $# -ge 1 ]; then
     arch=$1
     ./build-android-openssl.sh $arch
     ./build-android-nghttp2.sh $arch
