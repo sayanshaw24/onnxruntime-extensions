@@ -60,6 +60,16 @@ def read_git_refs():
     return release_branch, HEAD
 
 
+def _resolve_executable_path(command_or_path: pathlib.Path):
+    import shutil
+    executable_path = shutil.which(str(command_or_path))
+    if executable_path is None:
+        # command_or_path is not in PATH but might be a python module (e.g. cmake)
+        return str(command_or_path)
+    else:
+        return executable_path
+
+
 class BuildCMakeExt(_build_ext):
 
     def run(self):
@@ -143,19 +153,24 @@ class BuildCMakeExt(_build_ext):
             '--config', config,
             '--parallel' + ('' if cpu_number is None else ' ' + cpu_number)
         ]
-        cmake_exe = 'cmake'
+
+        # find installed cmake if possible. falls back to cmake python module (cmake_exe == 'cmake' in that case)
+        cmake_exe = _resolve_executable_path(pathlib.Path('cmake'))
 
         # Fix `ModuleNotFoundError: No module named 'cmake'` error when running `pip install -e .`
         # If pip-build-env is found in PYTHONPATH we know it's a pip interactive install and we need to remove it.
         # Deleting the entire PYTHONPATH value so that sys.path is used seems to work and is simpler.
         # If we need to refine we could remove specific entries from PYTHONPATH.
         # Coped from fix to similar issue with ONNX: https://github.com/onnx/onnx/issues/5194
-        if ("PYTHONPATH" in os.environ and "pip-build-env" in os.environ["PYTHONPATH"]):
-            del os.environ["PYTHONPATH"]
+        # if  "PYTHONPATH" in os.environ and "pip-build-env" in os.environ["PYTHONPATH"]:
+        #     print(os.environ["PYTHONPATH"])
+
+        # if sys.platform != "win32" and "PYTHONPATH" in os.environ and "pip-build-env" in os.environ["PYTHONPATH"]:
+        #     del os.environ["PYTHONPATH"]
 
         # unlike Linux/macOS, cmake pip package on Windows fails to build some 3rd party dependencies.
-        # so we have to use the cmake installed from Visual Studio.
-        if os.environ.get(VSINSTALLDIR_NAME):
+        # so we have to use the cmake installed from Visual Studio if we didn't find an installed cmake.
+        if os.environ.get(VSINSTALLDIR_NAME) and cmake_exe == 'cmake':
             cmake_exe = os.environ[VSINSTALLDIR_NAME] + \
                         'Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe'
 
