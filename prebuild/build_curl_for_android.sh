@@ -7,6 +7,7 @@ set -u
 set -x -v
 
 # change to the directory the script is in in case it's being executed from elsewhere
+echo `pwd`
 cd "$(dirname "$0")"
 
 # to simplify we only fetch and patch if the directory doesn't exist. 

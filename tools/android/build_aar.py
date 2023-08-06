@@ -30,7 +30,8 @@ def prebuild(abi: str, ndk_path: Path):
         abi
     ]
 
-    run(*prebuild_cmd, cwd=str(prebuild_dir))
+    run(*prebuild_cmd)
+    #run(*prebuild_cmd, cwd=str(prebuild_dir))
 
 
 def build_for_abi(
