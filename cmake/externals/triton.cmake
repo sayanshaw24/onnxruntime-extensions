@@ -23,8 +23,6 @@ if (WIN32)
   set(ENV{VCPKG_ROOT} ${VCPKG_SRC})
   message(STATUS "ENV{VCPKG_ROOT}: " $ENV{VCPKG_ROOT})
 
-  message(STATUS "triton.cmake vcpkg_triplet: ${vcpkg_triplet}")
-
   # NOTE: The VCPKG_ROOT environment variable isn't propagated to an add_custom_command target, so specify --vcpkg-root
   # here and in the vcpkg_install function
   add_custom_command(
@@ -38,7 +36,6 @@ if (WIN32)
   add_custom_target(vcpkg_integrate ALL DEPENDS vcpkg_integrate.stamp)
   set(VCPKG_DEPENDENCIES "vcpkg_integrate")
 
-  message(STATUS "")
   function(vcpkg_install PACKAGE_NAME)
     add_custom_command(
       OUTPUT ${VCPKG_SRC}/packages/${PACKAGE_NAME}_${vcpkg_triplet}/BUILD_INFO

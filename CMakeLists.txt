@@ -67,6 +67,11 @@ option(OCOS_BUILD_JAVA "Enable building the Java package" OFF)
 option(OCOS_BUILD_ANDROID "Enable building the Android package" OFF)
 option(OCOS_BUILD_APPLE_FRAMEWORK "Enable building of the MacOS/iOS framework" OFF)
 
+# Optional value. Some operators do not support old versions due to using the new custom operator interface
+# and will be disabled if this value is set and the version is incompatible.
+set(OCOS_ONNXRUNTIME_VERSION "" CACHE STRING
+  "The version of ONNX Runtime being used in the build. Format is <major>.<minor>.<patch>. e.g. 1.15.1" )
+
 function(disable_all_operators)
   set(OCOS_ENABLE_RE2_REGEX OFF CACHE INTERNAL "" FORCE)
   set(OCOS_ENABLE_TF_STRING OFF CACHE INTERNAL "" FORCE)
@@ -378,14 +383,25 @@ if(OCOS_ENABLE_BLINGFIRE)
   list(APPEND TARGET_SRC ${blingfire_TARGET_SRC})
 endif()
 
-message(STATUS "APPLE=${APPLE}")
-# build isn't setup for macOS or iOS yet
+# build isn't setup for macOS, iOS or WASM currently.
 # link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash) that needs to be investigated.
 # not sure if they're available on ARM 32. we explicitly add crypt32 to the link list which is where they should be defined.
-if(OCOS_ENABLE_AZURE AND (APPLE OR (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")))
-  message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, or Windows 32-bit ARM. "
-                 "Excluding them from the build.")
-  set(OCOS_ENABLE_AZURE OFF)
+if(OCOS_ENABLE_AZURE)
+  if (APPLE OR (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM") OR CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, Windows 32-bit ARM or WASM. "
+                   "Excluding them from the build.")
+    set(OCOS_ENABLE_AZURE OFF)
+
+  elseif(OCOS_ONNXRUNTIME_VERSION)
+    string(REPLACE "." ";" VERSION_LIST ${OCOS_ONNXRUNTIME_VERSION})
+    list(GET VERSION_LIST 0 ORT_VERSION_MAJOR)
+    list(GET VERSION_LIST 1 ORT_VERSION_MINOR)
+    if(ORT_VERSION_MAJOR EQUAL 1 AND ORT_VERSION_MINOR LESS 14)
+      message(STATUS "Azure custom operators are not supported with ONNX Runtime versions < 1.14. "
+                     "Excluding them from the build.")
+      set(OCOS_ENABLE_AZURE OFF)
+    endif()
+  endif()
 endif()
 
 if(OCOS_ENABLE_AZURE)
