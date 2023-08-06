@@ -24,10 +24,17 @@ _log = get_logger("build_aar")
 def prebuild(abi: str, ndk_path: Path):
     os.environ['ANDROID_NDK_ROOT'] = str(ndk_path)
     prebuild_dir = _repo_dir / "prebuild"
+    if abi == "armeabi-v7a":
+        curl_abi = "arm"
+    else if abi == "arm64-v8a":
+        curl_abi = "arm64"
+    else:
+        curl_abi = abi
+
     prebuild_cmd = [
         "/bin/bash",
         "build_curl_for_android.sh",
-        abi
+        curl_abi
     ]
 
     run(*prebuild_cmd)
