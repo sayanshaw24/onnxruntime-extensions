@@ -21,12 +21,17 @@ _supported_abis = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
 _log = get_logger("build_aar")
 
 # run the prebuild to create the curl and openssl libraries for the Azure custom ops
-def prebuild(abi: str, ndk_path: Path):
-    os.environ['ANDROID_NDK_ROOT'] = str(ndk_path)
+def prebuild(abi: str, ndk_path: Path, api_level: int):
     prebuild_dir = _repo_dir / "prebuild"
+
+    # set some environment variables required by the script
+    os.environ['ANDROID_API_LEVEL'] = str(api_level)
+    os.environ['ANDROID_NDK_ROOT'] = str(ndk_path)
+
+    # adjust some strings to the values expected in the script
     if abi == "armeabi-v7a":
         curl_abi = "arm"
-    else if abi == "arm64-v8a":
+    elif abi == "arm64-v8a":
         curl_abi = "arm64"
     else:
         curl_abi = abi
@@ -37,8 +42,7 @@ def prebuild(abi: str, ndk_path: Path):
         curl_abi
     ]
 
-    run(*prebuild_cmd)
-    #run(*prebuild_cmd, cwd=str(prebuild_dir))
+    run(*prebuild_cmd, cwd=str(prebuild_dir))
 
 
 def build_for_abi(
@@ -84,7 +88,7 @@ def do_build_by_mode(output_dir: Path,
 
     if mode in ["build_so_only", "build_aar"]:
         for abi in abis:
-            prebuild(abi, ndk_path)
+            prebuild(abi, ndk_path, api_level)
 
             build_dir = intermediates_dir / abi
             build_for_abi(build_dir, config, abi, api_level, sdk_path, ndk_path, other_args)

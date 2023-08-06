@@ -4,7 +4,6 @@
 
 set -e
 set -u
-set -x -v
 
 # change to the directory the script is in in case it's being executed from elsewhere
 echo `pwd`
@@ -25,13 +24,18 @@ fi
 
 cd tools
 
-# we target Android API level 24
-export api=24
+# we target Android API level 21 but allow override by environment variable
+if [ -z ${ANDROID_API_LEVEL+x} ]; then 
+    export api=21
+else
+    export api=${ANDROID_API_LEVEL}
+fi
 
+echo $api
 # provide a specific architecture as an argument to the script to limit the build to that
 # default is to build all
 # valid architecture values: "arm" "arm64" "x86" "x86_64"
-if [ $# -eq 1 ]; then
+if [ $# -gt 1 ]; then
     arch=$1
     ./build-android-openssl.sh $arch
     ./build-android-nghttp2.sh $arch
