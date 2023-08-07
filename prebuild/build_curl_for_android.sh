@@ -38,10 +38,10 @@ echo $api
 if [ $# -ge 1 ]; then
     arch=$1
     ./build-android-openssl.sh $arch
-    ./build-android-nghttp2.sh $arch
+    # ./build-android-nghttp2.sh $arch
     ./build-android-curl.sh $arch
 else
     ./build-android-openssl.sh
-    ./build-android-nghttp2.sh
+    # ./build-android-nghttp2.sh
     ./build-android-curl.sh
 fi
