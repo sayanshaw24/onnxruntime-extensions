@@ -60,12 +60,15 @@ def read_git_refs():
     return release_branch, HEAD
 
 
-def _resolve_executable_path(command_or_path: pathlib.Path):
+def _find_cmake():
     import shutil
-    executable_path = shutil.which(str(command_or_path))
+    executable_path = shutil.which('cmake')
     if executable_path is None:
-        # command_or_path is not in PATH but might be a python module (e.g. cmake)
-        return str(command_or_path)
+        try:
+            import cmake  # noqa
+            return 'cmake'  # use python module
+        except ImportError as ex:
+            raise ImportError("An installed version of CMake or python CMake module were not found.") from ex
     else:
         return executable_path
 
@@ -155,7 +158,9 @@ class BuildCMakeExt(_build_ext):
         ]
 
         # find installed cmake if possible. falls back to cmake python module (cmake_exe == 'cmake' in that case)
-        cmake_exe = _resolve_executable_path(pathlib.Path('cmake'))
+        # find installed cmake if possible. falls back to cmake python module (cmake_exe == 'cmake' in that case)
+        cmake_exe = _find_cmake()
+        print(f"Using '{cmake_exe}' for cmake.")
 
         # Fix `ModuleNotFoundError: No module named 'cmake'` error when running `pip install -e .`
         # If pip-build-env is found in PYTHONPATH we know it's a pip interactive install and we need to remove it.
