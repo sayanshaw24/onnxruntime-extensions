@@ -390,7 +390,7 @@ if(OCOS_ENABLE_AZURE)
   if (APPLE OR 
       CMAKE_SYSTEM_NAME STREQUAL "Emscripten" OR
       (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM") OR 
-      (ANDROID AND ANDROID_PLATFORM STEQUAL "x86"))  # TEMPORARY
+      (ANDROID AND ANDROID_ABI STREQUAL "x86"))  # TEMPORARY
     message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, Windows 32-bit ARM or WASM. "
                    "Excluding them from the build.")
     set(OCOS_ENABLE_AZURE OFF)
