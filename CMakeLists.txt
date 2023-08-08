@@ -387,7 +387,10 @@ endif()
 # link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash) that needs to be investigated.
 # not sure if they're available on ARM 32. we explicitly add crypt32 to the link list which is where they should be defined.
 if(OCOS_ENABLE_AZURE)
-  if (APPLE OR (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM") OR CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+  if (APPLE OR 
+      CMAKE_SYSTEM_NAME STREQUAL "Emscripten" OR
+      (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM") OR 
+      (ANDROID AND ANDROID_PLATFORM STEQUAL "x86"))  # TEMPORARY
     message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, Windows 32-bit ARM or WASM. "
                    "Excluding them from the build.")
     set(OCOS_ENABLE_AZURE OFF)
