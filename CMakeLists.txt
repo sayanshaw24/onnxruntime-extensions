@@ -661,7 +661,12 @@ if(OCOS_ENABLE_AZURE)
     # the find_package calls were made immediately after `include(curl)` so we know CURL and OpenSSL are available.
     # find_package doesn't work for nghttp2 so manually add the path and lib name
     # target_link_directories(ocos_operators PUBLIC ${NGHTTP2_ROOT_DIR}/lib)
-    target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL) # nghttp2)
+    target_include_directories(ocos_operators PUBLIC ${OPENSSL_ROOT_DIR}/include)
+    target_include_directories(ocos_operators PUBLIC ${CURL_ROOT_DIR}/include)
+    target_link_directories(ocos_operators PUBLIC ${OPENSSL_ROOT_DIR}/lib)
+    target_link_directories(ocos_operators PUBLIC ${CURL_ROOT_DIR}/lib)
+    target_link_libraries(ocos_operators PUBLIC curl crypto ssl) # nghttp2)
+    # target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL) # nghttp2)    
   else()
     # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build.
     # add a dependency so the fetch and build of triton happens first.
