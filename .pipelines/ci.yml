@@ -327,6 +327,8 @@ jobs:
 
       - script: |
           call activate pyenv
+          set CMAKE_ARGS=-DOCOS_ONNXRUNTIME_VERSION=$(ort.version)
+          echo %CMAKE_ARGS%
           python -m pip install .
         displayName: Build the wheel
 
