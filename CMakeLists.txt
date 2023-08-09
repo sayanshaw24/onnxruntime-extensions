@@ -392,17 +392,21 @@ if(OCOS_ENABLE_BLINGFIRE)
   list(APPEND TARGET_SRC ${blingfire_TARGET_SRC})
 endif()
 
-# build isn't setup for macOS, iOS or WASM currently.
-# link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash) that needs to be investigated.
-# not sure if they're available on ARM 32. we explicitly add crypt32 to the link list which is where they should be defined.
-# x86 Android build has error when using static openssl. TODO: resolve or try and get dynamic to work by adding extra libs to AAR.
+# Build with Azure ops is disabled in a number of places due to the following reasons:
+# - not setup for macOS, iOS or WASM
+# - link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash)
+#   - not sure if they're available on ARM 32.
+#   - we explicitly add crypt32 to the link list which is where they should be defined.
+# - build with static CRT on Windows causes link errors with triton. may not be supported.
+# - x86 Android build has error when using static openssl.
+#   - TODO: need to investigate further. currently getting load error with dynamic libs and runtime error with static libs
 if(OCOS_ENABLE_AZURE)
-  if (APPLE OR 
+  if (APPLE OR
       CMAKE_SYSTEM_NAME STREQUAL "Emscripten" OR
-      (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM") OR 
-      (ANDROID AND ANDROID_ABI STREQUAL "x86"))  # TEMPORARY
-    message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, Windows 32-bit ARM or WASM. "
-                   "Excluding them from the build.")
+      (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM") OR
+      (CMAKE_MSVC_RUNTIME_LIBRARY STREQUAL "MultiThreaded" OR CMAKE_MSVC_RUNTIME_LIBRARY STREQUAL "MultiThreadedDebug") OR
+      (ANDROID AND ANDROID_ABI STREQUAL "x86"))
+    message(STATUS "Excluding Azure custom operators as they are not currently supported in this type of build. ")
     set(OCOS_ENABLE_AZURE OFF)
 
   elseif(OCOS_ONNXRUNTIME_VERSION)
@@ -452,8 +456,16 @@ if(OCOS_ENABLE_AZURE)
         message(FATAL_ERROR "Unexpected ocos_target_platform: ${ocos_target_platform}")
       endif()
 
-      # TODO: Does this need to be adjusted based on CMAKE_MSVC_RUNTIME_LIBRARY?
-      set(vcpkg_triplet ${vcpkg_target_platform}-windows-static-md)
+      # TODO: currently we disable OCOS_ENABLE_AZURE if the build is using the static CRT, as we get errors like this:
+      #   httpclient_static.lib(http_client.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MD_DynamicRelease'
+      #   doesn't match value 'MT_StaticRelease' in ortcustomops.lib(ortcustomops.obj) [D:\a\1\s\out\Windows\extensions_shared.vcxproj]
+      # i.e. the 'if' will always be false until we fix that error or decide we don't need to support that sort of build.
+      if (CMAKE_MSVC_RUNTIME_LIBRARY STREQUAL "MultiThreaded" OR
+          CMAKE_MSVC_RUNTIME_LIBRARY STREQUAL "MultiThreadedDebug")
+          set(vcpkg_triplet ${vcpkg_target_platform}-windows-static-md)
+      else()
+        set(vcpkg_triplet ${vcpkg_target_platform}-windows)
+      endif()
 
       message(STATUS "vcpkg_triplet: ${vcpkg_triplet}")
     endif()
@@ -670,7 +682,7 @@ if(OCOS_ENABLE_AZURE)
   if (ANDROID)
     # find_package doesn't work for nghttp2 so manually add the path and lib name
     # target_link_directories(ocos_operators PUBLIC ${NGHTTP2_ROOT_DIR}/lib)
-    
+
     # if using static curl/openssl we need to manually specify these things instead of using find_package values
     # target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL) # nghttp2)
     target_include_directories(ocos_operators PUBLIC ${OPENSSL_ROOT_DIR}/include)
