@@ -75,6 +75,7 @@ extends:
         - task: PowerShell@2
           inputs:
             targetType: 'inline'
+            pwsh: true
             script: |
               $git_exe = get-command git
               Write-Host $git_exe.Source
