@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 #include <filesystem>
 #include "gtest/gtest.h"
-#include "ocos.h"
 #include "ustring.h"
 #include "string_utils.h"
 #include "string_tensor.h"
@@ -311,6 +310,7 @@ void TestInference(Ort::Env& env, const ORTCHAR_T* model_uri,
                    const char* custom_op_library_filename,
                    OutputValidator output_validator) {
   Ort::SessionOptions session_options;
+  session_options.SetLogSeverityLevel(1);
   void* handle = nullptr;
   if (custom_op_library_filename) {
     Ort::ThrowOnError(Ort::GetApi().RegisterCustomOpsLibrary((OrtSessionOptions*)session_options,

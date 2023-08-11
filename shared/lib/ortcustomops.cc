@@ -111,6 +111,13 @@ extern "C" ORTX_EXPORT OrtStatus* ORT_API_CALL RegisterCustomOps(OrtSessionOptio
   OrtCustomOpDomain* domain = nullptr;
   auto ver = GetOrtVersion(api);
   const OrtApi* ortApi = api->GetApi(ver);
+
+  // if building a shared library we need to delay the init of the global API pointer used in the exception helpers
+  // until now.
+#ifdef OCOS_SHARED_LIBRARY
+  Ort::InitApi(ortApi);
+#endif
+
   std::set<std::string> pyop_nameset;
 
 #if defined(PYTHON_OP_SUPPORT)

@@ -10,7 +10,6 @@
 #include "gtest/gtest.h"
 #include "opencv2/imgcodecs.hpp"
 
-#include "ocos.h"
 #include "test_kernel.hpp"
 #include "utils.hpp"
 

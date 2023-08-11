@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <locale>
 #include "gtest/gtest.h"
-#include "ocos.h"
 #include "test_kernel.hpp"
 
 TEST(tokenizer_opertors, test_bert_tokenizer) {

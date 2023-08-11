@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION)
+#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION) || defined(OCOS_SHARED_LIBRARY)
 #if defined(__ANDROID__)
 #include <android/log.h>
 #else
@@ -13,10 +13,17 @@
 
 #include <stdexcept>
 
-#include "onnxruntime_c_api.h"
+#ifdef OCOS_SHARED_LIBRARY
+  #define ORT_API_MANUAL_INIT
+  #include "onnxruntime_cxx_api.h"
+  #undef ORT_API_MANUAL_INIT
+#else
+  #include "onnxruntime_cxx_api.h"
+#endif
 
 namespace OrtW {
 
+#ifndef OCOS_SHARED_LIBRARY
 // All C++ methods that can fail will throw an exception of this type
 struct Exception : std::exception {
   Exception(std::string message, OrtErrorCode code) : message_{std::move(message)}, code_{code} {}
@@ -28,8 +35,9 @@ struct Exception : std::exception {
   std::string message_;
   OrtErrorCode code_;
 };
+#endif
 
-#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION)
+#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION) || defined(OCOS_SHARED_LIBRARY)
 inline void PrintFinalMessage(const char* file, int line, const char* msg) {
 #if defined(__ANDROID__)
   __android_log_print(ANDROID_LOG_ERROR, "onnxruntime-extensions", "Exception in %s line %d: %s", file, line, msg);
@@ -54,8 +62,18 @@ inline void PrintFinalMessage(const char* file, int line, const char* msg) {
 // a lambda function. otherwise the exception referred will be undefined and cause build break
 #define OCOS_HANDLE_EXCEPTION(func)
 #else
-#define ORTX_CXX_API_THROW(string, code) \
-  throw OrtW::Exception(string, code)
+
+// if this is a shared library we need to throw the ORT exception type as onnxruntime will not know about the 
+// OrtW::Exception.
+#ifdef OCOS_SHARED_LIBRARY
+  #define ORTX_CXX_API_THROW(string, code) \
+    OrtW::PrintFinalMessage(__FILE__, __LINE__, "throwing ORT exception"); \
+    throw std::runtime_error(string)
+    // ORT_CXX_API_THROW(string, code)
+#else
+  #define ORTX_CXX_API_THROW(string, code) \
+    throw OrtW::Exception(string, code)
+#endif
 
 #define OCOS_TRY try
 #define OCOS_CATCH(x) catch (x)

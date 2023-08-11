@@ -54,9 +54,9 @@ option(OCOS_ENABLE_BERT_TOKENIZER "Enable the BertTokenizer building" ON)
 option(OCOS_ENABLE_BLINGFIRE "Enable operators depending on the Blingfire library" ON)
 option(OCOS_ENABLE_MATH "Enable math tensor operators building" ON)
 option(OCOS_ENABLE_DLIB "Enable operators like Inverse depending on DLIB" ON)
-option(OCOS_ENABLE_OPENCV_CODECS "Enable cv2 and vision operators that require opencv imgcodecs." ON)
-option(OCOS_ENABLE_CV2 "Enable the operators in `operators/cv2`" ON)
-option(OCOS_ENABLE_VISION "Enable the operators in `operators/vision`" ON)
+option(OCOS_ENABLE_OPENCV_CODECS "Enable cv2 and vision operators that require opencv imgcodecs." OFF)
+option(OCOS_ENABLE_CV2 "Enable the operators in `operators/cv2`" OFF)
+option(OCOS_ENABLE_VISION "Enable the operators in `operators/vision`" OFF)
 option(OCOS_ENABLE_AUDIO "Enable the operators for audio processing" ON)
 option(OCOS_ENABLE_AZURE "Enable the operators for azure execution provider" ON)
 
@@ -387,12 +387,12 @@ endif()
 # link error on Windows 32-bit ARM from some functions in wincrpt.h (e.g. CryptDestroyHash) that needs to be investigated.
 # not sure if they're available on ARM 32. we explicitly add crypt32 to the link list which is where they should be defined.
 if(OCOS_ENABLE_AZURE)
-  if (APPLE OR 
+  if (APPLE OR
       CMAKE_SYSTEM_NAME STREQUAL "Emscripten" OR
-      (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM") OR 
-      (ANDROID AND ANDROID_ABI STREQUAL "x86"))  # TEMPORARY
-    message(STATUS "Azure custom operators are not currently supported on MacOS, iOS, Windows 32-bit ARM or WASM. "
-                   "Excluding them from the build.")
+      (MSVC AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM") OR
+      (MSVC AND OCOS_STATIC_MSVC_RUNTIME_LIBRARY) OR
+      (ANDROID AND ANDROID_ABI STREQUAL "x86"))
+    message(STATUS "Excluding Azure custom operators as they are not currently supported in this type of build. ")
     set(OCOS_ENABLE_AZURE OFF)
 
   elseif(OCOS_ONNXRUNTIME_VERSION)
@@ -604,8 +604,9 @@ if(OCOS_ENABLE_GPT2_TOKENIZER OR OCOS_ENABLE_WORDPIECE_TOKENIZER)
   list(APPEND ocos_libraries nlohmann_json::nlohmann_json)
 endif()
 
-if(OCOS_ENABLE_AZURE)
-  list(APPEND OCOS_COMPILE_DEFINITIONS ENABLE_AZURE)
+# If building a shared library we can't throw an internal exception type across the library boundary
+if(NOT OCOS_ENABLE_STATIC_LIB)
+  list(APPEND OCOS_COMPILE_DEFINITIONS OCOS_SHARED_LIBRARY)
 endif()
 
 target_include_directories(noexcep_operators PUBLIC ${GSL_INCLUDE_DIR})
@@ -651,6 +652,7 @@ if(NOT OCOS_ENABLE_STATIC_LIB AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
   endif()
 else()
   add_library(ortcustomops STATIC ${shared_TARGET_LIB_SRC})
+
   if (HAS_SDL)
     target_compile_options(ortcustomops PRIVATE "/sdl")
   endif()
@@ -664,12 +666,13 @@ if(OCOS_ENABLE_AZURE)
     # the find_package calls were made immediately after `include(curl)` so we know CURL and OpenSSL are available.
     # find_package doesn't work for nghttp2 so manually add the path and lib name
     # target_link_directories(ocos_operators PUBLIC ${NGHTTP2_ROOT_DIR}/lib)
-    target_include_directories(ocos_operators PUBLIC ${OPENSSL_ROOT_DIR}/include)
-    target_include_directories(ocos_operators PUBLIC ${CURL_ROOT_DIR}/include)
-    target_link_directories(ocos_operators PUBLIC ${OPENSSL_ROOT_DIR}/lib)
-    target_link_directories(ocos_operators PUBLIC ${CURL_ROOT_DIR}/lib)
-    target_link_libraries(ocos_operators PUBLIC curl crypto ssl) # nghttp2)
-    # target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL) # nghttp2)    
+
+    # target_include_directories(ocos_operators PUBLIC ${OPENSSL_ROOT_DIR}/include)
+    # target_include_directories(ocos_operators PUBLIC ${CURL_ROOT_DIR}/include)
+    # target_link_directories(ocos_operators PUBLIC ${OPENSSL_ROOT_DIR}/lib)
+    # target_link_directories(ocos_operators PUBLIC ${CURL_ROOT_DIR}/lib)
+    # target_link_libraries(ocos_operators PUBLIC curl crypto ssl) # nghttp2)
+    target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL) # nghttp2)    
   else()
     # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build.
     # add a dependency so the fetch and build of triton happens first.
@@ -729,13 +732,15 @@ if(OCOS_ENABLE_AZURE)
   endif()
 endif()
 
-target_compile_definitions(ortcustomops PUBLIC ${OCOS_COMPILE_DEFINITIONS})
-target_include_directories(ortcustomops PUBLIC "$<TARGET_PROPERTY:ocos_operators,INTERFACE_INCLUDE_DIRECTORIES>")
+target_compile_definitions(ortcustomops PRIVATE ${OCOS_COMPILE_DEFINITIONS})
+target_include_directories(ortcustomops PUBLIC $<TARGET_PROPERTY:ocos_operators,INTERFACE_INCLUDE_DIRECTORIES>)
 target_link_libraries(ortcustomops PUBLIC ocos_operators)
 
 if(_BUILD_SHARED_LIBRARY)
   file(GLOB shared_TARGET_SRC "shared/*.cc" "shared/*.h" "shared/*.def")
   add_library(extensions_shared SHARED ${shared_TARGET_SRC})
+  target_compile_definitions(extensions_shared PRIVATE ${OCOS_COMPILE_DEFINITIONS})
+  
   source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${shared_TARGET_SRC})
   standardize_output_folder(extensions_shared)
 
@@ -743,16 +748,12 @@ if(_BUILD_SHARED_LIBRARY)
     set_property(TARGET extensions_shared APPEND_STRING PROPERTY LINK_FLAGS "-Wl,-s -Wl,--version-script -Wl,${PROJECT_SOURCE_DIR}/shared/ortcustomops.ver")
   endif()
 
-  target_include_directories(extensions_shared PUBLIC "$<TARGET_PROPERTY:ortcustomops,INTERFACE_INCLUDE_DIRECTORIES>")
+  target_include_directories(extensions_shared PUBLIC $<TARGET_PROPERTY:ortcustomops,INTERFACE_INCLUDE_DIRECTORIES>)
   target_link_libraries(extensions_shared PRIVATE ortcustomops)
+
   set_target_properties(extensions_shared PROPERTIES OUTPUT_NAME "ortextensions")
   if(MSVC AND ocos_target_platform MATCHES "x86|x64")
     target_link_options(extensions_shared PRIVATE "/CETCOMPAT")
-  endif()
-
-  # TEMPORARY to debug LIBCMT issue
-  if(MSVC)
-    target_link_options(extensions_shared PRIVATE "/VERBOSE:LIB")
   endif()
 
   # Set some properties of your target
@@ -808,17 +809,23 @@ if(OCOS_ENABLE_CTEST)
   set(TEST_SRC_DIR ${PROJECT_SOURCE_DIR}/test)
   message(STATUS "Fetch googletest")
   include(googletest)
-  file(GLOB static_TEST_SRC "${TEST_SRC_DIR}/static_test/*.cc")
-  add_executable(ocos_test ${static_TEST_SRC})
-  standardize_output_folder(ocos_test)
-  target_link_libraries(ocos_test PRIVATE gtest_main ocos_operators ${ocos_libraries})
-  add_test(NAME ocos_test COMMAND $<TARGET_FILE:ocos_test>)
 
   SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
   find_library(ONNXRUNTIME onnxruntime HINTS "${ONNXRUNTIME_LIB_DIR}")
 
+  set(_can_build_ocos_test OFF)
+
   if(ONNXRUNTIME-NOTFOUND)
     message(WARNING "The prebuilt onnxruntime libraries directory cannot found (via ONNXRUNTIME_LIB_DIR), the extensions_test will be skipped.")
+
+    if(_BUILD_SHARED_LIBRARY)
+      message(WARNING "The prebuilt onnxruntime libraries directory cannot found (via ONNXRUNTIME_LIB_DIR). "
+      "The static ocos_test will be skipped as it needs to link against the onnxruntime library. "
+      "This is because the exception handling needs to throw exceptions that are defined by the onnxruntime library "
+      "when the operators are built as a shared library.")
+    else()
+      set(_can_build_ocos_test ON)
+    endif()
   else()
     set(LINUX_CC_FLAGS "")
 
@@ -829,18 +836,34 @@ if(OCOS_ENABLE_CTEST)
 
     file(GLOB shared_TEST_SRC "${TEST_SRC_DIR}/shared_test/*.cc" "${TEST_SRC_DIR}/shared_test/*.hpp")
     add_executable(extensions_test ${shared_TEST_SRC})
-    target_compile_definitions(extensions_test PUBLIC ${OCOS_COMPILE_DEFINITIONS})
+
+    # We have to remove the OCOS_BUILD_SHARED when building the test code. It is used to delay population of the 
+    # ORT api pointer until RegisterCustomOps is called, but the test code needs to create an ORT env which requires
+    # the pointer to exist.
+    set(test_compile_definitions ${OCOS_COMPILE_DEFINITIONS})
+    remove(test_compile_definitions "OCOS_SHARED_LIBRARY")
+    target_compile_definitions(extensions_test PUBLIC ${test_compile_definitions})
+
+    get_target_property(xxx extensions_test COMPILE_DEFINITIONS)
+    message(STATUS "orig:${xxx}")
 
     standardize_output_folder(extensions_test)
-    target_include_directories(extensions_test PRIVATE ${spm_INCLUDE_DIRS}
-      "$<TARGET_PROPERTY:extensions_shared,INTERFACE_INCLUDE_DIRECTORIES>")
+
+    target_include_directories(extensions_test PRIVATE 
+      ${spm_INCLUDE_DIRS}  # TODO: Why is this special cased?
+      $<TARGET_PROPERTY:extensions_shared,INTERFACE_INCLUDE_DIRECTORIES>)
 
     if(ONNXRUNTIME_LIB_DIR)
+      message(STATUS "Adding ONNXRUNTIME_LIB_DIR:${ONNXRUNTIME_LIB_DIR}")
       target_link_directories(extensions_test PRIVATE ${ONNXRUNTIME_LIB_DIR})
     endif()
 
-    target_link_libraries(extensions_test PRIVATE ocos_operators extensions_shared onnxruntime gtest_main gmock_main
-                          ${ocos_libraries} ${LINUX_CC_FLAGS})
+    get_target_property(xxx extensions_test COMPILE_DEFINITIONS)
+    message(STATUS "A:${xxx}")
+    target_link_libraries(extensions_test PRIVATE extensions_shared ${ocos_libraries} ${ONNXRUNTIME} gtest_main gmock_main ${LINUX_CC_FLAGS})
+
+    get_target_property(xxx extensions_test COMPILE_DEFINITIONS)
+    message(STATUS "B:${xxx}")
 
     # Copy ONNXRuntime DLLs into bin folder for testing on Windows platform
     if(WIN32)
@@ -861,5 +884,18 @@ if(OCOS_ENABLE_CTEST)
       ${TEST_DATA_SRC}
       ${TEST_DATA_DES})
     add_test(NAME extensions_test COMMAND $<TARGET_FILE:extensions_test>)
+  endif()
+
+  if (can_build_ocos_test)
+    file(GLOB static_TEST_SRC "${TEST_SRC_DIR}/static_test/*.cc")
+    add_executable(ocos_test ${static_TEST_SRC})
+    standardize_output_folder(ocos_test)
+    target_link_libraries(ocos_test PRIVATE gtest_main ocos_operators ${ocos_libraries})
+    
+    if(_BUILD_SHARED_LIBRARY)
+      target_link_libraries(ocos_test PRIVATE ${ONNXRUNTIME})
+    endif()
+
+    add_test(NAME ocos_test COMMAND $<TARGET_FILE:ocos_test>)
   endif()
 endif()
