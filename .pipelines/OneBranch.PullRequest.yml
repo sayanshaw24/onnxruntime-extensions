@@ -72,6 +72,19 @@ extends:
           ob_outputDirectory: '$(REPOROOT)\out'
           ob_sdl_binskim_break: true
         steps:
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              get-command git
+              $git_exe = get-command git
+              $git_install_dir = (get-item $git.Source).Directory.parent
+              gci -Recurse $git_install_dir -Filter "patch*"
+              $git_usr_bin = "$git_install_dir\usr\bin"
+              Write-Host "Adding $git_usr_bin to PATH"
+              $env:PATH+=";$git_usr_bin"
+              Write-Host "PATH=$env:PATH"
+          displayName: 'Find git path'
         - script: |
             @echo off
             set vswherepath="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
