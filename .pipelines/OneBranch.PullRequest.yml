@@ -76,12 +76,12 @@ extends:
           inputs:
             targetType: 'inline'
             script: |
-              get-command git
               $git_exe = get-command git
+              Write-Host $git_exe.Source
               $git_install_dir = (get-item $git.Source).Directory.parent
               gci -Recurse $git_install_dir -Filter "patch*"
               $git_usr_bin = "$git_install_dir\usr\bin"
-              Write-Host "Adding $git_usr_bin to PATH"
+              Write-Host Adding $git_usr_bin to PATH
               $env:PATH+=";$git_usr_bin"
               Write-Host "PATH=$env:PATH"
           displayName: 'Find git path'
