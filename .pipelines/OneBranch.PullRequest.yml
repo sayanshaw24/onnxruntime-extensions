@@ -80,9 +80,7 @@ extends:
               $git_exe = get-command git
               Write-Host $git_exe.Source
               $git_install_dir = (get-item $git_exe.Source).Directory.parent
-              gci "C:\Program Files (x86)\Windows Kits\10\bin"
-              gci -Recurse "C:\Program Files (x86)\Windows Kits\10\bin" -Filter "patch.*"
-              gci -Recurse "C:\Program Files\Windows Kits\10\bin" -Filter "patch.*"
+              gci -Recurse "C:\Program Files (x86)\Windows Kits\10\bin"
               $git_usr_bin = "$git_install_dir\usr\bin"
               Write-Host Adding $git_usr_bin to PATH
               $env:PATH+=";$git_usr_bin"
