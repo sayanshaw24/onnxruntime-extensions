@@ -77,10 +77,11 @@ extends:
             targetType: 'inline'
             pwsh: true
             script: |
+              winget install --id Git.Git -e --source winget
               $git_exe = get-command git
               Write-Host $git_exe.Source
               $git_install_dir = (get-item $git_exe.Source).Directory.parent
-              gci -Recurse "C:\Program Files (x86)\Windows Kits\10\bin"
+              gci -Recurse $git_install_dir
               $git_usr_bin = "$git_install_dir\usr\bin"
               Write-Host Adding $git_usr_bin to PATH
               $env:PATH+=";$git_usr_bin"
