@@ -60,7 +60,7 @@ struct BaseKernel {
   const OrtApi& api_;
   OrtW::CustomOpApi ort_;
   const OrtKernelInfo& info_;
-  const OrtLogger* logger_;
+  const OrtLogger* logger_{nullptr};
 };
 
 struct OrtTensorDimensions : std::vector<int64_t> {

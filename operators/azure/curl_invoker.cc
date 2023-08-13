@@ -84,7 +84,7 @@ void CurlInvoker::ExecuteRequest(CurlHandler& curl_handler) const {
   auto curl_ret = curl_handler.Perform();
   if (CURLE_OK != curl_ret) {
     const char* err = curl_easy_strerror(curl_ret);
-    KERNEL_LOG(ORT_LOGGING_LEVEL_ERROR, ("Error " + std::to_string(curl_ret) + ": " + err).c_str());
+    KERNEL_LOG(ORT_LOGGING_LEVEL_ERROR, ("Curl error (CURLcode=" + std::to_string(curl_ret) + "): " + err).c_str());
  
     ORTX_CXX_API_THROW(err, ORT_FAIL);
   }
