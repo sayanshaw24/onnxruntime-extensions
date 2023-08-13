@@ -38,10 +38,10 @@ struct Exception : std::exception {
 #endif
 
 // helper that outputs an error message in a platform aware manner
-// Usages: 
+// Usages:
 //  - logging exception message when it may not propagate up
 //  - logging failure when using the ORT logger
-inline void LogError(const char* file, int line, const char* msg) {
+inline void LogError(ORTCHAR_T* file, int line, const char* msg) {
 #if defined(__ANDROID__)
   __android_log_print(ANDROID_LOG_ERROR, "onnxruntime-extensions", "Error in %s line %d: %s", file, line, msg);
 #else
@@ -50,10 +50,10 @@ inline void LogError(const char* file, int line, const char* msg) {
 }
 
 #ifdef OCOS_NO_EXCEPTIONS
-#define ORTX_CXX_API_THROW(msg, code)                                          \
-  do {                                                                            \
-    OrtW::LogError(__FILE__, __LINE__, OrtW::Exception(msg, code).what()); \
-    abort();                                                                      \
+#define ORTX_CXX_API_THROW(msg, code)                                      \
+  do {                                                                     \
+    OrtW::LogError(ORT_FILE, __LINE__, OrtW::Exception(msg, code).what()); \
+    abort();                                                               \
   } while (false)
 
 #define OCOS_TRY if (true)
@@ -65,23 +65,23 @@ inline void LogError(const char* file, int line, const char* msg) {
 #define OCOS_HANDLE_EXCEPTION(func)
 #else
 
-// if this is a shared library we need to throw a known exception type as onnxruntime will not know about the 
+// if this is a shared library we need to throw a known exception type as onnxruntime will not know about the
 // OrtW::Exception.
 #ifdef OCOS_SHARED_LIBRARY
-  #if defined(__ANDROID__)
-    // onnxruntime and extensions are built with a static libc++ so each has a different definition of 
-    // std::runtime_error, so the ORT output from catching this exception will be 'unknown exception' and the error
-    // message is lost. log it first so at least it's somewhere
-    #define ORTX_CXX_API_THROW(msg, code) \
-      OrtW::LogError(__FILE__, __LINE__, std::string(msg).c_str()); \
-      throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
-  #else
-    #define ORTX_CXX_API_THROW(msg, code) \
-      throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
-  #endif
+#if defined(__ANDROID__)
+// onnxruntime and extensions are built with a static libc++ so each has a different definition of
+// std::runtime_error, so the ORT output from catching this exception will be 'unknown exception' and the error
+// message is lost. log it first so at least it's somewhere
+#define ORTX_CXX_API_THROW(msg, code)                           \
+  OrtW::LogError(ORT_FILE, __LINE__, std::string(msg).c_str()); \
+  throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
 #else
-  #define ORTX_CXX_API_THROW(msg, code) \
-    throw OrtW::Exception(msg, code)
+#define ORTX_CXX_API_THROW(msg, code) \
+  throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
+#endif
+#else
+#define ORTX_CXX_API_THROW(msg, code) \
+  throw OrtW::Exception(msg, code)
 #endif
 
 #define OCOS_TRY try
@@ -106,13 +106,13 @@ inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
 // if exceptions are disabled (a 3rd party library could throw so we need to handle that)
 // or we're preventing exception propagation, log and abort().
 #if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION)
-#define OCOS_API_IMPL_END                                     \
-  }                                                           \
-  OCOS_CATCH(const std::exception& ex) {                      \
-    OCOS_HANDLE_EXCEPTION([&]() {                             \
-      OrtW::LogError(__FILE__, __LINE__, ex.what()); \
-      abort();                                                \
-    });                                                       \
+#define OCOS_API_IMPL_END                            \
+  }                                                  \
+  OCOS_CATCH(const std::exception& ex) {             \
+    OCOS_HANDLE_EXCEPTION([&]() {                    \
+      OrtW::LogError(ORT_FILE, __LINE__, ex.what()); \
+      abort();                                       \
+    });                                              \
   }
 #else
 // rethrow.

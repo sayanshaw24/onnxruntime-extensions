@@ -38,7 +38,7 @@ struct BaseKernel {
     // Get logger from the OrtKernelInfo should never fail. The logger comes from the EP, and is set when the EP is
     // registered in the InferenceSession, which happens before model load.
     auto status = api.KernelInfo_GetLogger(&info, &logger_);
-    assert(status != nullptr);
+    assert(status == nullptr);
   }
 
   template <class T>
