@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION)
+#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION) || defined(OCOS_SHARED_LIBRARY)
 #if defined(__ANDROID__)
 #include <android/log.h>
 #else
@@ -13,10 +13,19 @@
 
 #include <stdexcept>
 
+// TODO: We need to do manual init in RegisterCustomOps if we want to use the ORT C++ API
+// #ifdef OCOS_SHARED_LIBRARY
+//   #define ORT_API_MANUAL_INIT
+//   #include "onnxruntime_cxx_api.h"
+//   #undef ORT_API_MANUAL_INIT
+// #else
+//   #include "onnxruntime_cxx_api.h"
+// #endif
 #include "onnxruntime_c_api.h"
 
 namespace OrtW {
 
+#if !defined(OCOS_SHARED_LIBRARY)
 // All C++ methods that can fail will throw an exception of this type
 struct Exception : std::exception {
   Exception(std::string message, OrtErrorCode code) : message_{std::move(message)}, code_{code} {}
@@ -28,9 +37,12 @@ struct Exception : std::exception {
   std::string message_;
   OrtErrorCode code_;
 };
+#endif
 
-#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION)
-inline void PrintFinalMessage(const char* file, int line, const char* msg) {
+// helper that directly logs the exception message when we're going to abort, or the exception info might not
+// propagate up (e.g. Android build where the onnxruntime and extensions uses static libc++ as recommended).
+#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION) || defined(OCOS_SHARED_LIBRARY)
+inline void LogException(const char* file, int line, const char* msg) {
 #if defined(__ANDROID__)
   __android_log_print(ANDROID_LOG_ERROR, "onnxruntime-extensions", "Exception in %s line %d: %s", file, line, msg);
 #else
@@ -40,10 +52,10 @@ inline void PrintFinalMessage(const char* file, int line, const char* msg) {
 #endif
 
 #ifdef OCOS_NO_EXCEPTIONS
-#define ORTX_CXX_API_THROW(string, code)                                               \
-  do {                                                                                 \
-    OrtW::PrintFinalMessage(__FILE__, __LINE__, OrtW::Exception(string, code).what()); \
-    abort();                                                                           \
+#define ORTX_CXX_API_THROW(msg, code)                                          \
+  do {                                                                            \
+    OrtW::LogException(__FILE__, __LINE__, OrtW::Exception(msg, code).what()); \
+    abort();                                                                      \
   } while (false)
 
 #define OCOS_TRY if (true)
@@ -54,8 +66,17 @@ inline void PrintFinalMessage(const char* file, int line, const char* msg) {
 // a lambda function. otherwise the exception referred will be undefined and cause build break
 #define OCOS_HANDLE_EXCEPTION(func)
 #else
-#define ORTX_CXX_API_THROW(string, code) \
-  throw OrtW::Exception(string, code)
+
+// if this is a shared library we need to throw a known exception type as onnxruntime will not know about the 
+// OrtW::Exception.
+#ifdef OCOS_SHARED_LIBRARY
+  #define ORTX_CXX_API_THROW(msg, code) \
+    OrtW::LogException(__FILE__, __LINE__, std::string(msg).c_str()); \
+    throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
+#else
+  #define ORTX_CXX_API_THROW(msg, code) \
+    throw OrtW::Exception(msg, code)
+#endif
 
 #define OCOS_TRY try
 #define OCOS_CATCH(x) catch (x)
@@ -83,7 +104,7 @@ inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
   }                                                           \
   OCOS_CATCH(const std::exception& ex) {                      \
     OCOS_HANDLE_EXCEPTION([&]() {                             \
-      OrtW::PrintFinalMessage(__FILE__, __LINE__, ex.what()); \
+      OrtW::LogException(__FILE__, __LINE__, ex.what()); \
       abort();                                                \
     });                                                       \
   }
