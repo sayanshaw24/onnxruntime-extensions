@@ -41,7 +41,7 @@ struct Exception : std::exception {
 // Usages:
 //  - logging exception message when it may not propagate up
 //  - logging failure when using the ORT logger
-inline void LogError(ORTCHAR_T* file, int line, const char* msg) {
+inline void LogError(const ORTCHAR_T* file, int line, const char* msg) {
 #if defined(__ANDROID__)
   __android_log_print(ANDROID_LOG_ERROR, "onnxruntime-extensions", "Error in %s line %d: %s", file, line, msg);
 #else
@@ -72,9 +72,12 @@ inline void LogError(ORTCHAR_T* file, int line, const char* msg) {
 // onnxruntime and extensions are built with a static libc++ so each has a different definition of
 // std::runtime_error, so the ORT output from catching this exception will be 'unknown exception' and the error
 // message is lost. log it first so at least it's somewhere
-#define ORTX_CXX_API_THROW(msg, code)                           \
-  OrtW::LogError(ORT_FILE, __LINE__, std::string(msg).c_str()); \
-  throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
+#define ORTX_CXX_API_THROW(msg_in, code)                                   \
+  do {                                                                     \
+    std::string msg(msg_in);                                               \
+    OrtW::LogError(ORT_FILE, __LINE__, msg.c_str());                       \
+    throw std::runtime_error((std::to_string(code) + ": " + msg).c_str()); \
+  } while(false)
 #else
 #define ORTX_CXX_API_THROW(msg, code) \
   throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
