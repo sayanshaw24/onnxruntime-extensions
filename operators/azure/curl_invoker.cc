@@ -84,9 +84,7 @@ void CurlInvoker::ExecuteRequest(CurlHandler& curl_handler) const {
   auto curl_ret = curl_handler.Perform();
   if (CURLE_OK != curl_ret) {
     const char* err = curl_easy_strerror(curl_ret);
-    // TODO: Need kernel log macro to plug in most parts here and just take a level and message.
-    api_.Logger_LogMessage(logger_, ORT_LOGGING_LEVEL_ERROR, ("Curl error code: " + std::to_string(curl_ret)).c_str(), 
-                           ORT_FILE, __LINE__, __FUNCTION__);
+    KERNEL_LOG(ORT_LOGGING_LEVEL_ERROR, ("Error " + std::to_string(curl_ret) + ": " + err).c_str());
  
     ORTX_CXX_API_THROW(err, ORT_FAIL);
   }

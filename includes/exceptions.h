@@ -3,12 +3,10 @@
 
 #pragma once
 
-#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION) || defined(OCOS_SHARED_LIBRARY)
 #if defined(__ANDROID__)
 #include <android/log.h>
 #else
 #include <iostream>
-#endif
 #endif
 
 #include <stdexcept>
@@ -39,22 +37,22 @@ struct Exception : std::exception {
 };
 #endif
 
-// helper that directly logs the exception message when we're going to abort, or the exception info might not
-// propagate up (e.g. Android build where the onnxruntime and extensions uses static libc++ as recommended).
-#if defined(OCOS_NO_EXCEPTIONS) || defined(OCOS_PREVENT_EXCEPTION_PROPAGATION) || defined(OCOS_SHARED_LIBRARY)
-inline void LogException(const char* file, int line, const char* msg) {
+// helper that outputs an error message in a platform aware manner
+// Usages: 
+//  - logging exception message when it may not propagate up
+//  - logging failure when using the ORT logger
+inline void LogError(const char* file, int line, const char* msg) {
 #if defined(__ANDROID__)
-  __android_log_print(ANDROID_LOG_ERROR, "onnxruntime-extensions", "Exception in %s line %d: %s", file, line, msg);
+  __android_log_print(ANDROID_LOG_ERROR, "onnxruntime-extensions", "Error in %s line %d: %s", file, line, msg);
 #else
-  std::cerr << "Exception in " << file << " line " << line << ": " << msg << std::endl;
+  std::cerr << "Error in " << file << " line " << line << ": " << msg << std::endl;
 #endif
 }
-#endif
 
 #ifdef OCOS_NO_EXCEPTIONS
 #define ORTX_CXX_API_THROW(msg, code)                                          \
   do {                                                                            \
-    OrtW::LogException(__FILE__, __LINE__, OrtW::Exception(msg, code).what()); \
+    OrtW::LogError(__FILE__, __LINE__, OrtW::Exception(msg, code).what()); \
     abort();                                                                      \
   } while (false)
 
@@ -70,9 +68,17 @@ inline void LogException(const char* file, int line, const char* msg) {
 // if this is a shared library we need to throw a known exception type as onnxruntime will not know about the 
 // OrtW::Exception.
 #ifdef OCOS_SHARED_LIBRARY
-  #define ORTX_CXX_API_THROW(msg, code) \
-    OrtW::LogException(__FILE__, __LINE__, std::string(msg).c_str()); \
-    throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
+  #if defined(__ANDROID__)
+    // onnxruntime and extensions are built with a static libc++ so each has a different definition of 
+    // std::runtime_error, so the ORT output from catching this exception will be 'unknown exception' and the error
+    // message is lost. log it first so at least it's somewhere
+    #define ORTX_CXX_API_THROW(msg, code) \
+      OrtW::LogError(__FILE__, __LINE__, std::string(msg).c_str()); \
+      throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
+  #else
+    #define ORTX_CXX_API_THROW(msg, code) \
+      throw std::runtime_error((std::to_string(code) + ": " + msg).c_str())
+  #endif
 #else
   #define ORTX_CXX_API_THROW(msg, code) \
     throw OrtW::Exception(msg, code)
@@ -104,7 +110,7 @@ inline void ThrowOnError(const OrtApi& ort, OrtStatus* status) {
   }                                                           \
   OCOS_CATCH(const std::exception& ex) {                      \
     OCOS_HANDLE_EXCEPTION([&]() {                             \
-      OrtW::LogException(__FILE__, __LINE__, ex.what()); \
+      OrtW::LogError(__FILE__, __LINE__, ex.what()); \
       abort();                                                \
     });                                                       \
   }
