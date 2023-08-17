@@ -15,16 +15,8 @@ class CurlHandler {
  public:
   using WriteCallBack = size_t (*)(char*, size_t, size_t, void*);
 
-  CurlHandler(WriteCallBack callback);
+  CurlHandler(const Logger& logger);
   ~CurlHandler() = default;
-
-  /// <summary>
-  /// Callback to add contents to a string
-  /// </summary>
-  /// <seealso cref="https://curl.se/libcurl/c/CURLOPT_WRITEFUNCTION.html"/>
-  /// <returns>Bytes processed. If this does not match element_size * num_elements the libcurl function
-  /// used will return CURLE_WRITE_ERROR</returns>
-  static size_t WriteStringCallback(char* contents, size_t element_size, size_t num_elements, void* userdata);
 
   void AddHeader(const char* data) {
     headers_.reset(curl_slist_append(headers_.release(), data));
@@ -64,11 +56,17 @@ class CurlHandler {
   }
 
  private:
+  size_t WriteStringCallback(char* contents, size_t element_size, size_t num_elements, void* userdata);
+
   std::unique_ptr<CURL, decltype(curl_easy_cleanup)*> curl_;
   std::unique_ptr<curl_slist, decltype(curl_slist_free_all)*> headers_;
   curl_httppost* from_{};
   curl_httppost* last_{};
-  std::unique_ptr<curl_httppost, decltype(curl_formfree)*> from_holder_;  // TODO: Why no last_holder_?
+  std::unique_ptr<curl_httppost, decltype(curl_formfree)*> from_holder_;
+
+  // use a lambda for the callback so we can use the logger for errors
+  std::function<size_t(char*, size_t, size_t, void*)> write_string_callback_;
+  const Logger& logger_;
 };
 
 /// <summary>

@@ -20,8 +20,8 @@ namespace {
 #if defined(USE_IN_MEMORY_CURL_CERTS)
 // in-memory certs
 CURLcode sslctx_function(CURL* /*curl*/, void* sslctx, void* /*parm*/) {
-  // the #include defines `static const char curl_pem[] = ...;` with the certs
-  #include "curl.cacert.pem.inc"
+// the #include defines `static const char curl_pem[] = ...;` with the certs
+#include "curl_certs/cacert.pem.inc"
 
   // TODO: Doing this on every requests seems excessive. See if we can cache anything.
   BIO* cbio = BIO_new_mem_buf(curl_pem, sizeof(curl_pem));
@@ -57,40 +57,51 @@ CURLcode sslctx_function(CURL* /*curl*/, void* sslctx, void* /*parm*/) {
   rv = CURLE_OK;
   return rv;
 }
-
-#endif
+#endif  // defined(USE_IN_MEMORY_CURL_CERTS)
 }  // namespace
 
 // apply the callback only when response is for sure to be a '/0' terminated string
+/// <summary>
+/// Callback to add contents to a string
+/// </summary>
+/// <seealso cref="https://curl.se/libcurl/c/CURLOPT_WRITEFUNCTION.html"/>
+/// <returns>Bytes processed. If this does not match element_size * num_elements the libcurl function
+/// used will return CURLE_WRITE_ERROR</returns>
 size_t CurlHandler::WriteStringCallback(char* contents, size_t element_size, size_t num_elements, void* userdata) {
+  size_t bytes_written = 0;
   try {
     size_t bytes = element_size * num_elements;
     std::string& buffer = *static_cast<std::string*>(userdata);
     buffer.append(contents, bytes);
-    return bytes;
+    bytes_written = bytes;
   } catch (const std::exception& ex) {
-    // TODO: This should be captured/logger properly
-    std::cerr << ex.what() << std::endl;
-    return 0;
+    KERNEL_LOG(logger_, ORT_LOGGING_LEVEL_ERROR, ex.what());
   } catch (...) {
     // exception caught, abort write
-    std::cerr << "Unknown exception caught in CurlHandler::WriteStringCallback" << std::endl;
-    return 0;
+    KERNEL_LOG(logger_, ORT_LOGGING_LEVEL_ERROR, "Unknown exception caught in CurlHandler::WriteStringCallback");
   }
+
+  return bytes_written;
 }
 
-CurlHandler::CurlHandler(WriteCallBack callback) : curl_(curl_easy_init(), curl_easy_cleanup),
-                                                   headers_(nullptr, curl_slist_free_all),
-                                                   from_holder_(from_, curl_formfree) {
+CurlHandler::CurlHandler(const Logger& logger)
+    : curl_(curl_easy_init(), curl_easy_cleanup),
+      headers_(nullptr, curl_slist_free_all),
+      from_holder_(from_, curl_formfree),
+      logger_(logger) {
   CURL* curl = curl_.get();  // CURL == void* so can't dereference
 
-  curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 100 * 1024L);  // how was this size chosen? should it be set on a per operator basis?
+  write_string_callback_ = [this](char* contents, size_t element_size, size_t num_elements, void* userdata) -> size_t {
+    return WriteStringCallback(contents, element_size, num_elements, userdata);
+  };
+
+  curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 100 * 1024L);
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl/7.83.1");  // should this value come from the curl src instead of being hardcoded?
   curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);            // 50 seems like a lot if we're directly calling a specific endpoint
-  curl_easy_setopt(curl, CURLOPT_FTP_SKIP_PASV_IP, 1L);      // what does this have to do with http requests?
+  curl_easy_setopt(curl, CURLOPT_FTP_SKIP_PASV_IP, 1L);      // is this relevant to https requests?
   curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_string_callback_);
 
 #if defined(USE_IN_MEMORY_CURL_CERTS)
   curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslctx_function);
@@ -116,7 +127,7 @@ void CurlInvoker::ComputeImpl(const ortc::Variadic& inputs, ortc::Variadic& outp
   ValidateInputs(inputs);
 
   // set the options for the curl handler that apply to all usages
-  CurlHandler curl_handler(CurlHandler::WriteStringCallback);
+  CurlHandler curl_handler(GetLogger());
 
   std::string full_auth = std::string{"Authorization: Bearer "} + auth_token;
   curl_handler.AddHeader(full_auth.c_str());
@@ -136,10 +147,10 @@ void CurlInvoker::ExecuteRequest(CurlHandler& curl_handler) const {
   auto curl_ret = curl_handler.Perform();
   if (CURLE_OK != curl_ret) {
     const char* err = curl_easy_strerror(curl_ret);
-    KERNEL_LOG(ORT_LOGGING_LEVEL_ERROR, ("Curl error (CURLcode=" + std::to_string(curl_ret) + "): " + err).c_str());
+    KERNEL_LOG(GetLogger(), ORT_LOGGING_LEVEL_ERROR,
+               ("Curl error (CURLcode=" + std::to_string(curl_ret) + "): " + err).c_str());
 
     ORTX_CXX_API_THROW(err, ORT_FAIL);
   }
 }
-
 }  // namespace ort_extensions
