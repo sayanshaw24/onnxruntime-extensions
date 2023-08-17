@@ -111,7 +111,7 @@ index b82d2bd..cfb0fd2 100755
      else
          log_error "not support" && exit 1
 diff --git a/tools/build-android-openssl.sh b/tools/build-android-openssl.sh
-index e13c314..8f8267c 100755
+index e13c314..4e57334 100755
 --- a/tools/build-android-openssl.sh
 +++ b/tools/build-android-openssl.sh
 @@ -16,7 +16,7 @@
@@ -123,18 +123,7 @@ index e13c314..8f8267c 100755
  
  source ./build-android-common.sh
  
-@@ -69,6 +69,10 @@ function configure_make() {
-     pushd .
-     cd "${LIB_NAME}"
- 
-+    log_info "patch to change android hash for cert lookup"
-+    # https://stackoverflow.com/a/66926685
-+    patch -p1 --verbose -i ${TOOLS_ROOT}/../../openssl_crypto_x509_android_hash.patch
-+
-     PREFIX_DIR="${pwd_path}/../output/android/openssl-${ABI}"
-     if [ -d "${PREFIX_DIR}" ]; then
-         rm -fr "${PREFIX_DIR}"
-@@ -87,20 +91,20 @@ function configure_make() {
+@@ -87,20 +87,20 @@ function configure_make() {
      android_printf_global_params "$ARCH" "$ABI" "$ABI_TRIPLE" "$PREFIX_DIR" "$OUTPUT_ROOT"
  
      if [[ "${ARCH}" == "x86_64" ]]; then
@@ -163,7 +152,7 @@ index e13c314..8f8267c 100755
  
      else
          log_error "not support" && exit 1
-@@ -115,6 +119,9 @@ function configure_make() {
+@@ -115,6 +115,9 @@ function configure_make() {
      if [ $the_rc -eq 0 ] ; then
          make SHLIB_EXT='.so' install_sw >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
          make install_ssldirs >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
