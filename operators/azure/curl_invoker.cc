@@ -3,10 +3,63 @@
 
 #include "curl_invoker.hpp"
 
-#include <iostream>  // TEMP error output
 #include <sstream>
 
+#if defined(__ANDROID__)
+#define USE_IN_MEMORY_CURL_CERTS
+#endif
+
+#if defined(USE_IN_MEMORY_CURL_CERTS)
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+#endif
+
 namespace ort_extensions {
+namespace {
+// need to do in memory cert on Android pending finding a way to use the system certs.
+#if defined(USE_IN_MEMORY_CURL_CERTS)
+// in-memory certs
+CURLcode sslctx_function(CURL* /*curl*/, void* sslctx, void* /*parm*/) {
+  // the #include defines `static const char curl_pem[] = ...;` with the certs
+  #include "curl.cacert.pem.inc"
+
+  // TODO: Doing this on every requests seems excessive. See if we can cache anything.
+  BIO* cbio = BIO_new_mem_buf(curl_pem, sizeof(curl_pem));
+  X509_STORE* cts = SSL_CTX_get_cert_store(static_cast<SSL_CTX*>(sslctx));
+
+  CURLcode rv = CURLE_ABORTED_BY_CALLBACK;
+
+  if (!cts || !cbio) {
+    return rv;
+  }
+
+  STACK_OF(X509_INFO)* inf = PEM_X509_INFO_read_bio(cbio, NULL, NULL, NULL);
+
+  if (!inf) {
+    BIO_free(cbio);
+    return rv;
+  }
+
+  for (int i = 0; i < sk_X509_INFO_num(inf); ++i) {
+    X509_INFO* itmp = sk_X509_INFO_value(inf, i);
+    if (itmp->x509) {
+      X509_STORE_add_cert(cts, itmp->x509);
+    }
+
+    if (itmp->crl) {
+      X509_STORE_add_crl(cts, itmp->crl);
+    }
+  }
+
+  sk_X509_INFO_pop_free(inf, X509_INFO_free);
+  BIO_free(cbio);
+
+  rv = CURLE_OK;
+  return rv;
+}
+
+#endif
+}  // namespace
 
 // apply the callback only when response is for sure to be a '/0' terminated string
 size_t CurlHandler::WriteStringCallback(char* contents, size_t element_size, size_t num_elements, void* userdata) {
@@ -38,16 +91,10 @@ CurlHandler::CurlHandler(WriteCallBack callback) : curl_(curl_easy_init(), curl_
   curl_easy_setopt(curl, CURLOPT_FTP_SKIP_PASV_IP, 1L);      // what does this have to do with http requests?
   curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
-  
-//#if defined(__ANDROID__)
-  curl_easy_setopt(curl, CURLOPT_CAPATH, "/system/etc/security/cacerts");
-  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-// #endif
 
-  // TEMP
-  // https://stackoverflow.com/questions/25253823/how-to-make-ssl-peer-verify-work-on-android
-  // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-
+#if defined(USE_IN_MEMORY_CURL_CERTS)
+  curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslctx_function);
+#endif
   // should this be configured via a node attribute? different endpoints may have different timeouts
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
 }
@@ -90,8 +137,9 @@ void CurlInvoker::ExecuteRequest(CurlHandler& curl_handler) const {
   if (CURLE_OK != curl_ret) {
     const char* err = curl_easy_strerror(curl_ret);
     KERNEL_LOG(ORT_LOGGING_LEVEL_ERROR, ("Curl error (CURLcode=" + std::to_string(curl_ret) + "): " + err).c_str());
- 
+
     ORTX_CXX_API_THROW(err, ORT_FAIL);
   }
 }
+
 }  // namespace ort_extensions
