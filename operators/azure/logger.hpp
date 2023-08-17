@@ -88,7 +88,7 @@ class LoggerImpl {
 #define KERNEL_LOG(logger, severity, msg) \
   logger.LogMessage(severity, __FILEW__, __LINE__, __FUNCTION__, msg)
 #else
-#define KERNEL_LOG(severity, msg) \
+#define KERNEL_LOG(logger, severity, msg) \
   logger.LogMessage(severity, __FILE__, __LINE__, __FUNCTION__, msg)
 #endif
 
