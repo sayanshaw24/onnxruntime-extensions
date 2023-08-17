@@ -55,8 +55,14 @@ class CurlHandler {
     return curl_easy_perform(curl_.get());
   }
 
+  struct WriteStringCallbackData {
+    WriteStringCallbackData(const Logger& logger_in) : logger{logger_in} {}
+    std::string response;
+    const Logger& logger;
+  };
+
  private:
-  size_t WriteStringCallback(char* contents, size_t element_size, size_t num_elements, void* userdata);
+  static size_t WriteStringCallback(char* contents, size_t element_size, size_t num_elements, void* userdata);
 
   std::unique_ptr<CURL, decltype(curl_easy_cleanup)*> curl_;
   std::unique_ptr<curl_slist, decltype(curl_slist_free_all)*> headers_;
@@ -65,7 +71,6 @@ class CurlHandler {
   std::unique_ptr<curl_httppost, decltype(curl_formfree)*> from_holder_;
 
   // use a lambda for the callback so we can use the logger for errors
-  std::function<size_t(char*, size_t, size_t, void*)> write_string_callback_;
   const Logger& logger_;
 };
 

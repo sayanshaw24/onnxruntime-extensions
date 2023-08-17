@@ -69,16 +69,16 @@ CURLcode sslctx_function(CURL* /*curl*/, void* sslctx, void* /*parm*/) {
 /// used will return CURLE_WRITE_ERROR</returns>
 size_t CurlHandler::WriteStringCallback(char* contents, size_t element_size, size_t num_elements, void* userdata) {
   size_t bytes_written = 0;
+  WriteStringCallbackData* data = static_cast<WriteStringCallbackData*>(userdata);
   try {
     size_t bytes = element_size * num_elements;
-    std::string& buffer = *static_cast<std::string*>(userdata);
-    buffer.append(contents, bytes);
+    data->response.append(contents, bytes);
     bytes_written = bytes;
   } catch (const std::exception& ex) {
-    KERNEL_LOG(logger_, ORT_LOGGING_LEVEL_ERROR, ex.what());
+    KERNEL_LOG(data->logger, ORT_LOGGING_LEVEL_ERROR, ex.what());
   } catch (...) {
     // exception caught, abort write
-    KERNEL_LOG(logger_, ORT_LOGGING_LEVEL_ERROR, "Unknown exception caught in CurlHandler::WriteStringCallback");
+    KERNEL_LOG(data->logger, ORT_LOGGING_LEVEL_ERROR, "Unknown exception caught in CurlHandler::WriteStringCallback");
   }
 
   return bytes_written;
@@ -91,21 +91,18 @@ CurlHandler::CurlHandler(const Logger& logger)
       logger_(logger) {
   CURL* curl = curl_.get();  // CURL == void* so can't dereference
 
-  write_string_callback_ = [this](char* contents, size_t element_size, size_t num_elements, void* userdata) -> size_t {
-    return WriteStringCallback(contents, element_size, num_elements, userdata);
-  };
-
   curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 100 * 1024L);
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl/7.83.1");  // should this value come from the curl src instead of being hardcoded?
   curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);            // 50 seems like a lot if we're directly calling a specific endpoint
   curl_easy_setopt(curl, CURLOPT_FTP_SKIP_PASV_IP, 1L);      // is this relevant to https requests?
   curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_string_callback_);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteStringCallback);
 
 #if defined(USE_IN_MEMORY_CURL_CERTS)
   curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslctx_function);
 #endif
+
   // should this be configured via a node attribute? different endpoints may have different timeouts
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
 }
@@ -134,12 +131,12 @@ void CurlInvoker::ComputeImpl(const ortc::Variadic& inputs, ortc::Variadic& outp
   curl_handler.SetOption(CURLOPT_URL, ModelUri().c_str());
   curl_handler.SetOption(CURLOPT_VERBOSE, Verbose());
 
-  std::string response;
-  curl_handler.SetOption(CURLOPT_WRITEDATA, (void*)&response);
+  CurlHandler::WriteStringCallbackData callback_data(GetLogger());
+  curl_handler.SetOption(CURLOPT_WRITEDATA, (void*)&callback_data);
 
   SetupRequest(curl_handler, inputs);
   ExecuteRequest(curl_handler);
-  ProcessResponse(response, outputs);
+  ProcessResponse(callback_data.response, outputs);
 }
 
 void CurlInvoker::ExecuteRequest(CurlHandler& curl_handler) const {
