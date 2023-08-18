@@ -692,6 +692,7 @@ endif()
 
 if(OCOS_ENABLE_AZURE)
   if (ANDROID)
+    find_package(ZLIB REQUIRED)
     # If using static curl/openssl we need these
     # target_include_directories(ocos_operators PUBLIC ${OPENSSL_ROOT_DIR}/include)
     # target_include_directories(ocos_operators PUBLIC ${CURL_ROOT_DIR}/include)
@@ -701,7 +702,7 @@ if(OCOS_ENABLE_AZURE)
 
     # dynamic curl/openssl uses these
     # the find_package calls were made immediately after `include(curl)` so we know CURL and OpenSSL are available.
-    target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
+    target_link_libraries(ocos_operators PUBLIC CURL::libcurl OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB)
   else()
     # we need files from the triton client (e.g. curl header on linux) to be available for the ocos_operators build.
     # add a dependency so the fetch and build of triton happens first.
