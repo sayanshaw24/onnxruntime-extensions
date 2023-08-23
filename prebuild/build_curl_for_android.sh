@@ -20,6 +20,7 @@ if [ ! -d "openssl_for_ios_and_android" ]; then
 else
     echo "Skipping checkout and patch"
     cd openssl_for_ios_and_android
+    git apply ../build_curl_for_android_on_linux.patch
 fi
 
 cd tools
