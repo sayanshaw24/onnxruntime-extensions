@@ -35,8 +35,8 @@ def make_graph(*args, doc_string=None, **kwargs):
 
 
 # need to include the certs for curl+openssl on Android in the model as a node attribute
-x509_certs = get_certs_from_url("https://curl.se/ca/cacert.pem")
-assert x509_certs
+# x509_certs = get_certs_from_url("https://curl.se/ca/cacert.pem")
+# assert x509_certs
 
 # This creates a model that allows the prompt and filename to be optionally provided as inputs.
 # The filename can be specified to indicate a different audio type to the default value in the audio_format attribute.
@@ -72,7 +72,7 @@ model = helper.make_model(
                 model_uri='https://api.openai.com/v1/audio/transcriptions',
                 model_name='whisper-1',
                 timeout_seconds=20,
-                x509_certificates=x509_certs,
+                # x509_certificates=x509_certs,
                 verbose=0,
             ),
         ],

@@ -5,11 +5,11 @@
 
 #include <sstream>
 
-// #if defined(__ANDROID__) 
-// #define USE_IN_MEMORY_CURL_CERTS
+// #if defined(__ANDROID__)
+// #define USE_CERTS_FROM_MODEL
 // #endif
 
-#if defined(USE_IN_MEMORY_CURL_CERTS)
+#if defined(USE_CERTS_FROM_MODEL)
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
@@ -18,8 +18,8 @@
 
 namespace ort_extensions {
 namespace {
-// need to do in-memory cert on Android pending finding a way to use the system certs.
-#if defined(USE_IN_MEMORY_CURL_CERTS)
+// build an in-memory cert store and populate with certs from the model
+#if defined(USE_CERTS_FROM_MODEL)
 // based on the approach from https://curl.se/libcurl/c/cacertinmem.html
 X509_STORE* CreateX509Store(const std::string& certs) {
   bool success = false;
@@ -82,7 +82,7 @@ CURLcode sslctx_function(CURL* /*curl*/, void* sslctx, void* /*parm*/) {
 
   return CURLE_OK;
 }
-#endif  // defined(USE_IN_MEMORY_CURL_CERTS)
+#endif  // defined(USE_CERTS_FROM_MODEL)
 }  // namespace
 
 // apply the callback only when response is for sure to be a '/0' terminated string
@@ -122,7 +122,7 @@ CurlHandler::CurlHandler() : curl_(curl_easy_init(), curl_easy_cleanup),
   curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteStringCallback);
 
-#if defined(USE_IN_MEMORY_CURL_CERTS)
+#if defined(USE_CERTS_FROM_MODEL)
   curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslctx_function);
 #endif
 }
@@ -131,18 +131,14 @@ CurlHandler::CurlHandler() : curl_(curl_easy_init(), curl_easy_cleanup),
 
 CurlInvoker::CurlInvoker(const OrtApi& api, const OrtKernelInfo& info)
     : CloudBaseKernel(api, info) {
-#if defined(USE_IN_MEMORY_CURL_CERTS)
+#if defined(USE_CERTS_FROM_MODEL)
   std::string x509_certs;
   if (TryToGetAttribute(kX509Certificates, x509_certs) && !x509_certs.empty()) {
     // populate certificate store
     static_cast<void>(GetCertificateStore(x509_certs));
   } else {
-    // attribute not present or empty. there could be other Azure operator nodes in the model though and we only need
-    // one to provide the certs.
-    KERNEL_LOG(GetLogger(), ORT_LOGGING_LEVEL_WARNING,
-               (std::string(kX509Certificates) +
-                " attribute is required on Android from at least one Azure custom operator in the model")
-                   .c_str());
+    // attribute not present or empty. in-memory store may not be required or there could be other Azure operator 
+    // nodes in the model and we only need one to provide the certs.
   }
 #endif
 }
