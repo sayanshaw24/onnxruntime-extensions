@@ -5,9 +5,9 @@
 
 #include <sstream>
 
-#if defined(__ANDROID__)
-#define USE_IN_MEMORY_CURL_CERTS
-#endif
+// #if defined(__ANDROID__) 
+// #define USE_IN_MEMORY_CURL_CERTS
+// #endif
 
 #if defined(USE_IN_MEMORY_CURL_CERTS)
 #include <openssl/err.h>
